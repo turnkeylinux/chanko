@@ -28,7 +28,8 @@ def main():
         sourceslist = sys.argv[1]
         refresh = True
 
-    container.Container.init_create(sourceslist, refresh)
+    cont = container.Container()
+    cont.init_create(sourceslist, refresh)
     
 if __name__ == "__main__":
     main()

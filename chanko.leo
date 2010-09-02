@@ -12,7 +12,7 @@
 <v t="loni.20100902123045" a="E"><vh>Project</vh>
 <v t="loni.20100902123045.1" a="E"><vh>design</vh>
 <v t="loni.20100902123045.2"><vh>brainstorming</vh></v>
-<v t="loni.20100902123045.3" a="TV"><vh>file/data structure</vh></v>
+<v t="loni.20100902123045.3"><vh>file/data structure</vh></v>
 <v t="loni.20100902123045.4"><vh>cli syntax</vh></v>
 <v t="loni.20100902123045.5"><vh>usage examples</vh></v>
 </v>
@@ -26,6 +26,7 @@
 <v t="loni.20100902123045.13"><vh>query-r</vh></v>
 <v t="loni.20100902123045.14"><vh>query-l</vh></v>
 </v>
+<v t="loni.20100902180534" a="TV"><vh>refresh</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -439,8 +440,7 @@ apt-get $R_OPTIONS update
 . conf
 
 echo "deb file:/// local debs" &gt; $L_CACHE/sources.list
-apt-ftparchive packages $R_CACHE/archives &gt; $L_CACHE/lists/_dists_local_debs_bin
-ary-i386_Packages
+apt-ftparchive packages $R_CACHE/archives &gt; $L_CACHE/lists/_dists_local_debs_binary-i386_Packages
 apt-cache $L_OPTIONS gencaches
 
 
@@ -477,5 +477,31 @@ apt-cache $L_OPTIONS $@
 
 
 </t>
+<t tx="loni.20100902180534">flow:
+    * get list of index files to download from sources.list
+        options:
+            write parser, or
+            apt-get $OPTIONS --print-urisupdate (then just parse the uris)
+    
+    * ignore translation entries
+    
+    * get the release.gpg file (and corresponding Release file)
+        (print-uris dont contain them, only the gpg's)
+        verify the Release file
+        if we already have a (compressed) Packages file
+            parse the release files and test md5 to see if we have the latest
+            if match, exit (we are up to date)
+    
+    * get the compressed Package files
+    * verify integrity (md5)
+    * uncompress Package files
+    * regenerate cache
+
+
+
+    
+
+GOTCHA?
+    sumo-get doesn't expect upstream files to change??</t>
 </tnodes>
 </leo_file>
