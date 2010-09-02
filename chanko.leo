@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.322094055013">
-	<global_window_position top="0" left="0" height="600" width="1127"/>
+<globals body_outline_ratio="0.331854480923">
+	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -12,9 +12,9 @@
 <v t="loni.20100902123045" a="E"><vh>Project</vh>
 <v t="loni.20100902123045.1" a="E"><vh>design</vh>
 <v t="loni.20100902123045.2"><vh>brainstorming</vh></v>
-<v t="loni.20100902123045.3"><vh>file/data structure</vh></v>
+<v t="loni.20100902123045.3" a="TV"><vh>file/data structure</vh></v>
 <v t="loni.20100902123045.4"><vh>cli syntax</vh></v>
-<v t="loni.20100902123045.5" a="T"><vh>usage examples</vh></v>
+<v t="loni.20100902123045.5"><vh>usage examples</vh></v>
 </v>
 <v t="loni.20100902123045.6" a="E"><vh>implementation</vh>
 <v t="loni.20100902123045.7" a="M"><vh>create test environment</vh>
@@ -26,7 +26,7 @@
 <v t="loni.20100902123045.13"><vh>query-r</vh></v>
 <v t="loni.20100902123045.14"><vh>query-l</vh></v>
 </v>
-<v t="loni.20100902123045.15" a="V"><vh>TODO</vh></v>
+<v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
 </vnodes>
@@ -139,7 +139,7 @@ GENERIC     Dir                         -&gt; $BASE/                           #
 GENERIC     Dir::Etc                    -&gt; config/
 REMOTE      Dir::Cache                  -&gt; cache/remote
 LOCAL       Dir::Cache                  -&gt; cache/local
-LOCAL       Dir::Etc::SourceList        -&gt; $BASE/cache/local/sources.list"  # created on the fly...
+LOCAL       Dir::Etc::SourceList        -&gt; $BASE/cache/local/sources.list   # created on the fly...
 GENERIC     Dir::State                  -&gt; state/apt/
 REMOTE      Dir::State::Lists           -&gt; $BASE/cache/remote/lists
 LOCAL       Dir::State::Lists           -&gt; $BASE/cache/local/lists
@@ -182,7 +182,7 @@ chanko-get [-options] package[=version] ...
         instead of
             $dir/neverland-&lt;version&gt;.&lt;arch&gt;.deb
 
-chanko-query &lt;-r | -l&gt; [-options] [package_glob]
+chanko-query (-r | -l) [-options] [package_glob]
     if package_glob is provided, print only those packages whose names match the glob
     otherwise, by default, print a list of all packages
     
