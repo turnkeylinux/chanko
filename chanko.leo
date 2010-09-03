@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.331854480923">
-	<global_window_position top="0" left="5" height="709" width="1127"/>
+<globals body_outline_ratio="0.284826974268">
+	<global_window_position top="10" left="10" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -26,7 +26,8 @@
 <v t="loni.20100902123045.13"><vh>query-r</vh></v>
 <v t="loni.20100902123045.14"><vh>query-l</vh></v>
 </v>
-<v t="loni.20100902180534" a="TV"><vh>refresh</vh></v>
+<v t="loni.20100902180534"><vh>refresh</vh></v>
+<v t="loni.20100903152430" a="TV"><vh>query</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -471,12 +472,16 @@ apt-cache $L_OPTIONS $@
 * create pyproject
     * init
     * refresh
-    * query (basic)
+    * query (remote)
     * get
-    * query
+    * query (local)
 
 
-</t>
+Next Actions:
+    create basic query support (search, details/info)
+    get
+    
+    </t>
 <t tx="loni.20100902180534">flow:
     * get list of index files to download from sources.list
         options:
@@ -498,10 +503,47 @@ apt-cache $L_OPTIONS $@
     * regenerate cache
 
 
-
-    
-
 GOTCHA?
     sumo-get doesn't expect upstream files to change??</t>
+<t tx="loni.20100903152430">Syntax: query (-r | -l) [-options] [package_glob]
+Query chanko container
+
+If package_glob is provided, print only those packages whose names match the
+glob otherwise, by default, print a list of all packages
+
+Arguments:
+  -r  --remote   Query remote packages
+  -l  --local    Query local packages stored in the container
+
+Options:
+  --info         Print full package information
+  --names-only   Print only the names of packages (without the package summary)
+                 Incompatible with --info option
+
+
+queries:
+    print list of all packages with short description
+        chanko-query (-r|-l)
+        apt-cache search . | sort
+    
+    print list of all packages (without description)
+        chanko-query (-r|-l) --names-only
+        apt-cache pkgnames | sort
+        
+    print full package information on all packages
+        chanko-query (-r|-l) --info
+        apt-cache dumpavail
+
+    print list of all packages with short description that match a package_glob
+        chanko-query (-r|-l) package_glob
+        apt-cache search package_glob | sort    
+
+    print list of all packages (without description) that match a package_glob
+        chanko-query (-r|-l) --names-only package_glob
+        apt-cache pkgnames package_glob | sort
+        
+    print info on specific package
+        chanko-query (-r|-l) --info package
+        apt-cache show package</t>
 </tnodes>
 </leo_file>

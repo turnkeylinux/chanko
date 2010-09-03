@@ -88,10 +88,22 @@ class Container:
         file(self.paths.local["Dir::Etc::SourceList"], "w").write(l_sources)
 
         if refresh:
-            print "refreshing..."
             self.refresh(remote=True, local=False)
         else:
             print "chanko sources.list: " + self.paths.remote("Dir::Etc::SourceList")
+
+    def _join_dicts(self, dict1, dict2):
+        for opt in dict2.keys():
+            dict1[opt] = dict2[opt]                
+        return dict1
+    
+    def _remote_cache(self):
+        paths = self._join_dicts(self.paths.generic, self.paths.remote)
+        return cache.Cache(paths, self.paths.remote_opts)
+
+    def _local_cache(self):
+        paths = self._join_dicts(self.paths.generic, self.paths.local)
+        return cache.Cache(paths, self.paths.local_opts)
 
     def refresh(self, remote, local):
         """ resynchronize remote / refresh local index files and caches """
@@ -99,19 +111,24 @@ class Container:
         if not os.path.exists(self.paths.generic["Dir"]):
             raise Error("chanko container does not exist")
         
-        def _join_dicts(dict1, dict2):
-            for opt in dict2.keys():
-                dict1[opt] = dict2[opt]                
-            return dict1
-
         if remote:
-            paths = _join_dicts(self.paths.generic, self.paths.remote)
-            c = cache.Cache(paths, self.paths.remote_opts)
+            c = self._remote_cache()
             c.refresh()
         
         if local:
-            paths = _join_dicts(self.paths.generic, self.paths.local)
-            c = cache.Cache(paths, self.paths.local_opts)
+            c = self._local_cache()
             c.refresh()
             
+    def query(self, remote, local, package, 
+              info=False, names=False, stats=False):
+
+        if remote:
+            c = self._remote_cache()
+            c.query(package, info, names, stats)
+        
+        if local:
+            pkg_cache = self.paths.local["Dir::State::Lists"] + "/_dists_local_debs_binary-i386_Packages"
+            if os.path.getsize(pkg_cache) > 0:
+                c = self._local_cache()
+                c.query(package, info, names, stats)
 

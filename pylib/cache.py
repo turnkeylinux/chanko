@@ -57,10 +57,48 @@ class Cache:
             
         else:
             # reminder: arch
-            pkgs_file = self.paths["Dir::State::Lists"] + "/_dists_local_debs_binary-i386_Packages"
+            pkg_cache = self.paths["Dir::State::Lists"] + "/_dists_local_debs_binary-i386_Packages"
             os.system("apt-ftparchive packages %s > %s" % (
-                      self.paths["Dir::Cache::Archives"], pkgs_file))
+                      self.paths["Dir::Cache::Archives"], pkg_cache))
 
         self.generate()
 
+    def query(self, package, info, names, stats):
+        if not package and not info and not names:
+            # list all packages with short description
+            # chanko-query (-r|-l)
+            os.system("apt-cache %s search . | sort" % self.options)
+            
+        elif not package and not info and names:
+            # list all packages (without description)
+            # chanko-query (-r|-l) --names
+            os.system("apt-cache %s pkgnames | sort" % self.options)
+            
+        elif not package and info and not names:
+            # list full package information on all packages
+            # chanko-query (-r|-l) --info
+            os.system("apt-cache %s dumpavail" % self.options)
+            
+        elif package and not info and not names:
+            # list all packages with short desc that match package_glob
+            # chanko-query (-r|-l) package_glob
+            os.system("apt-cache %s search %s | sort" % (self.options, package))
 
+        elif package and not info and names:
+            # list all packages (without description) that match a package_glob
+            # chanko-query (-r|-l) --names package_glob
+            os.system("apt-cache %s pkgnames %s | sort" % (self.options, package))
+        
+        elif package and info and not names:
+            # list info on specific package
+            # chanko-query (-r|-l) --info package
+            os.system("apt-cache %s show %s" % (self.options, package))
+        
+        else:
+            print "options provided do not match a valid query"
+            
+        if stats:
+            print
+            os.system("apt-cache %s stats" % self.options)
+
+        
