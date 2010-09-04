@@ -4,19 +4,18 @@ import os
 import re
 import string
 import commands
+from os.path import *
 
-import cache
-
-class Error(Exception):
-    pass
+from utils import *
+import apt
 
 class ContainerPaths:
     def __init__(self, path=None):
         if path is None:
             path = os.getenv('CHANKO_DIR', os.getcwd())
 
-        path = os.path.realpath(path)
-        base = path + "/.chanko/"
+        self.path = realpath(path)
+        base = self.path + "/.chanko/"
 
         self.generic = {'Dir':                  base,
                         'Dir::Etc':             base + "config/",
@@ -56,30 +55,22 @@ class Container:
     def init_create(self, sourceslist, refresh):
         """ create the container on the filesystem """
         
-        if not os.path.exists(sourceslist):
+        if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
         
-        if os.path.exists(self.paths.generic["Dir"]):
+        if exists(self.paths.generic["Dir"]):
             raise Error("container already created")
         
-        def mkdir(path):
-            """ recursive: creates parent dirs if they don't exist """
-            head, tail = os.path.split(path)
-            if head and not os.path.isdir(head):
-                mkdir(head)
-            if tail:
-                os.mkdir(path)           
-            
-        mkdir(self.paths.generic["Dir::Etc"])
-        mkdir(self.paths.generic["Dir::State"])
+        mkdir_parents(self.paths.generic["Dir::Etc"])
+        mkdir_parents(self.paths.generic["Dir::State"])
 
-        mkdir(os.path.dirname(paths.generic["Dir::State::status"]))
+        mkdir_parents(dirname(self.paths.generic["Dir::State::status"]))
         file(self.paths.generic["Dir::State::status"], "w").write("")
         
         for path in [self.paths.remote, self.paths.local]:
-            mkdir(path["Dir::Cache"])
-            mkdir(path["Dir::Cache::Archives"] + "/partial")
-            mkdir(path["Dir::State::Lists"]+ "/partial")
+            mkdir_parents(path["Dir::Cache"])
+            mkdir_parents(path["Dir::Cache::Archives"] + "/partial")
+            mkdir_parents(path["Dir::State::Lists"]+ "/partial")
 
         r_sources = file(sourceslist).read()
         file(self.paths.remote["Dir::Etc::SourceList"], "w").write(r_sources)
@@ -97,38 +88,53 @@ class Container:
             dict1[opt] = dict2[opt]                
         return dict1
     
+    def _remote_get(self):
+        paths = self._join_dicts(self.paths.generic, self.paths.remote)
+        return apt.Get(paths, self.paths.remote_opts)
+
     def _remote_cache(self):
         paths = self._join_dicts(self.paths.generic, self.paths.remote)
-        return cache.Cache(paths, self.paths.remote_opts)
+        return apt.Cache(paths, self.paths.remote_opts)
 
     def _local_cache(self):
         paths = self._join_dicts(self.paths.generic, self.paths.local)
-        return cache.Cache(paths, self.paths.local_opts)
+        return apt.Cache(paths, self.paths.local_opts)
 
     def refresh(self, remote, local):
         """ resynchronize remote / refresh local index files and caches """
 
-        if not os.path.exists(self.paths.generic["Dir"]):
+        if not exists(self.paths.generic["Dir"]):
             raise Error("chanko container does not exist")
         
         if remote:
-            c = self._remote_cache()
-            c.refresh()
+            cache = self._remote_cache()
+            cache.refresh()
         
         if local:
-            c = self._local_cache()
-            c.refresh()
+            cache = self._local_cache()
+            cache.refresh()
             
     def query(self, remote, local, package, 
               info=False, names=False, stats=False):
 
         if remote:
-            c = self._remote_cache()
-            c.query(package, info, names, stats)
+            cache = self._remote_cache()
+            cache.query(package, info, names, stats)
         
         if local:
             pkg_cache = self.paths.local["Dir::State::Lists"] + "/_dists_local_debs_binary-i386_Packages"
-            if os.path.getsize(pkg_cache) > 0:
-                c = self._local_cache()
-                c.query(package, info, names, stats)
+            if exists(pkg_cache) and getsize(pkg_cache) > 0:
+                cache = self._local_cache()
+                cache.query(package, info, names, stats)
+            else:
+                print "container empty"
 
+    def get(self, packages, dir=None, tree=False, force=False):
+        if not dir:
+            dir = self.paths.path
+        get = self._remote_get()
+        get.install(packages, dir, tree, force)
+        
+        #refresh local cache so it can be queried
+        self.refresh(remote=False, local=True)
+        

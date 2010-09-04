@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.284826974268">
-	<global_window_position top="10" left="10" height="709" width="1127"/>
+<globals body_outline_ratio="0.325643300799">
+	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -26,8 +26,8 @@
 <v t="loni.20100902123045.13"><vh>query-r</vh></v>
 <v t="loni.20100902123045.14"><vh>query-l</vh></v>
 </v>
-<v t="loni.20100902180534"><vh>refresh</vh></v>
-<v t="loni.20100903152430" a="TV"><vh>query</vh></v>
+<v t="loni.20100902180534" a="TV"><vh>refresh</vh></v>
+<v t="loni.20100903152430"><vh>query</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -175,7 +175,7 @@ chanko-get [-options] package[=version] ...
         dont ask for confirmation before downloading
     
     -d --dir
-        directory to store the package, default is cwd
+        directory in which to store the package, default is CHANKO_DIR
 
     -t --tree
         output dir is in package tree format (like an automatic repository)
@@ -467,21 +467,12 @@ apt-cache $L_OPTIONS $@
 
 
 </t>
-<t tx="loni.20100902123045.15">* OO design
-
-* create pyproject
-    * init
-    * refresh
-    * query (remote)
-    * get
-    * query (local)
-
-
-Next Actions:
-    create basic query support (search, details/info)
-    get
-    
-    </t>
+<t tx="loni.20100902123045.15">* clean up and refactor code
+* sumo arena integration
+    redesign list related storage caching to use dir out of arena
+        central, seperate, softlinks, cache?
+    check if CHANKO_DIR is in arena
+</t>
 <t tx="loni.20100902180534">flow:
     * get list of index files to download from sources.list
         options:
@@ -502,9 +493,7 @@ Next Actions:
     * uncompress Package files
     * regenerate cache
 
-
-GOTCHA?
-    sumo-get doesn't expect upstream files to change??</t>
+</t>
 <t tx="loni.20100903152430">Syntax: query (-r | -l) [-options] [package_glob]
 Query chanko container
 
