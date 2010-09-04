@@ -4,14 +4,9 @@
 Refresh chanko container index files and cache
 
 Arguments:
-    -r --remote
-        resynchronize remote index files and refresh remote cache
-
-    -l --local
-        regenerate local index and refresh local cache
-        
-    -a --all
-        refresh both remote and local
+  -r  --remote   Resynchronize remote index files and refresh remote cache
+  -l  --local    Regenerate local index and refresh local cache
+  -a  --all      Refresh both remote and local
 
 """
 import sys
