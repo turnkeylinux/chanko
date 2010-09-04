@@ -26,8 +26,12 @@
 <v t="loni.20100902123045.13"><vh>query-r</vh></v>
 <v t="loni.20100902123045.14"><vh>query-l</vh></v>
 </v>
-<v t="loni.20100902180534" a="TV"><vh>refresh</vh></v>
+<v t="loni.20100902180534"><vh>refresh</vh></v>
 <v t="loni.20100903152430"><vh>query</vh></v>
+<v t="loni.20100904214912" a="E"><vh>sumo integration</vh>
+<v t="loni.20100904214912.1"><vh>use case</vh></v>
+<v t="loni.20100904215050" a="TV"><vh>file/data structure</vh></v>
+</v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -468,10 +472,7 @@ apt-cache $L_OPTIONS $@
 
 </t>
 <t tx="loni.20100902123045.15">* clean up and refactor code
-* sumo arena integration
-    redesign list related storage caching to use dir out of arena
-        central, seperate, softlinks, cache?
-    check if CHANKO_DIR is in arena
+
 </t>
 <t tx="loni.20100902180534">flow:
     * get list of index files to download from sources.list
@@ -534,5 +535,69 @@ queries:
     print info on specific package
         chanko-query (-r|-l) --info package
         apt-cache show package</t>
+<t tx="loni.20100904214912">
+</t>
+<t tx="loni.20100904214912.1">
+* alon sets up a sumo arena with chanko, and gets files A, B, C
+* alon then registers the arena with covin
+* liraz registers the arena on his side, and merges
+    * the merge replays the journal and downloads files A, B, C
+* liraz now wants to use chanko to get/query
+    * for that, he needs to create the cache
+    * liraz does a chanko-refresh -a (maybe automatically on a get/query?)
+        which downloads the Package and Release files for alons sources.list
+        and indexes and caches both remote/local</t>
+<t tx="loni.20100904215050">
+current data structure is not very optimized for sumo, as it will
+be "doing stuff" in the arena, which will included in the git-repo, 
+and it shouldn't be.
+
+we cannot use git-ignore, so we are going to seperate the data structure.
+this will also allow us to create a download cache (similar to sumo's 
+cache) available to all chanko containers.
+
+Current data structure
+----------------------
+.chanko/
+    config/
+        sources.list
+    cache/
+        local/
+            sources.list
+            pkgcache.bin
+            lists/
+        remote/
+            pkgcache.bin
+            archives/
+            lists/
+    state/
+        dpkg/
+
+Proposed data structure
+-----------------------
+
+~/.chanko/
+    caches/
+        65sf36d6sdfs4dfsgdfs/
+            local/
+                sources.list
+                pkgcache.bin
+                lists/
+            remote/
+                pkgcache.bin
+                lists/
+    state/
+        dpkg/
+
+
+arena/.container/
+    config/
+        sources.list
+        arch
+        hash
+    archives/               # leverage sumo-cp -l (hardlink copy)
+
+
+</t>
 </tnodes>
 </leo_file>

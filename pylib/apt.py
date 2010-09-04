@@ -219,4 +219,3 @@ class Cache:
             print
             system("apt-cache %s stats" % self.options)
 
-        
