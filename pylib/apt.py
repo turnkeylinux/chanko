@@ -25,6 +25,7 @@ class Uri:
         else:
             self.path = string.join([dir, self.filename], "/")
 
+        print "* getting: " + self.filename
         system("curl -L -f %s -o %s" % (self.url, self.path))
 
     def md5_verify(self):
