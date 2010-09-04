@@ -4,15 +4,57 @@ import os
 import re
 import errno
 import shutil
+import string
 from os.path import *
 
 from utils import *
+
+class Uri:
+    def __init__(self, url):
+        self.url = url
+        self.filename = basename(url)
+        self.tree = treepath(self.filename)
+        self.path = None
+        self.md5 = None
+        self.size = 0
+
+    def get(self, dir, tree):
+        #reminder: update for sumo
+        if tree:
+            self.path = string.join([dir, self.tree, self.filename], "/")
+        else:
+            self.path = string.join([dir, self.filename], "/")
+
+        system("curl -L -f %s -o %s" % (self.url, self.path))
+
+    def md5_verify(self):
+        if not self.path:
+            fatal("no path set for: " + self.filename)
+        
+        if not self.md5:
+            fatal("no md5 set for: " + self.path)
+        
+        if not self.md5 == getoutput("md5sum %s | awk '{print $1}'" % self.path):
+            fatal("md5sum verification failed: %s" % self.path)
+        
+    def archive(self, archive_path):
+        dest = string.join([archive_path, self.filename], "/")
+        try:
+            os.link(self.path, dest)
+        except OSError, e:
+            if e[0] != errno.EXDEV:
+                raise e
+            warn("copying file into archive instead of hard-linking")
+            shutil.copyfile(path, dest)
 
 class Get:
     def __init__(self, paths, options):
         self.paths = paths
         self.options = options
 
+    def _cmdget(self, opts):
+        return getoutput("apt-get %s --print-uris %s" % (self.options, opts))
+    
     def _parse_update_uris(self, raw):
         uris = []
         for uri in raw.split("\n"):
@@ -26,24 +68,23 @@ class Get:
         return uris
 
     def _parse_install_uris(self, raw):
-        uris = []
+        self.uris = []
         for line in raw.split("\n"):
+            if re.match("Need to get 0B(.*)", line):
+                abort("Newest version already in container")
+            
             m = re.match("\'(.*)\' (.*) (.*) (.*)", line)
             if m:
-                uri = {'url':  m.group(1),
-                       'file': m.group(2),
-                       'size': m.group(3),
-                       'md5':  m.group(4)
-                      }
-                uris.append(uri)
-        return uris
-
+                uri = Uri(m.group(1))
+                uri.size = int(m.group(3))
+                uri.md5 = m.group(4)
+                
+                self.uris.append(uri)
+    
     def _md5sum(self, path):
         return getoutput("md5sum %s | awk '{print $1}'" % path)
 
     def _download(self, url, dir, filename=None):
-        # if container is in sumo arena, use sumo-get, otherwise use curl
-        # curl
         if filename:
             dst = dir + "/" + filename
         else:
@@ -53,26 +94,8 @@ class Get:
         system("curl -L -f %s -o %s" % (url, dst))
         return dst
 
-    def _treepath(self, file):
-        name = file.split("_")[0]
-        m = re.match("^lib(.*)", name)
-        if m:
-            prefix = "lib" + m.group(1)[0]
-        else:
-            prefix = name[0]
-        return prefix + "/" + name
-        
-    def _store(self, path, dest):
-        try:
-            os.link(path, dest)
-        except OSError, e:
-            if e[0] != errno.EXDEV:
-                raise e
-            warn("copying file into cache instead of hard-linking")
-            shutil.copyfile(path, dest)
-
     def update(self):
-        raw = getoutput("apt-get %s --print-uris update" % self.options)
+        raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
         for uri in uris:
@@ -98,49 +121,36 @@ class Get:
                                (uri["file"] + ".bz2"))
                 system("bzcat %s > %s" % ((path + ".bz2"), path))
 
-                
     def install(self, packages, dir, tree, force):
-        packages_str = ""
-        for p in packages:
-            packages_str = packages_str + p + " "
-
-        raw = getoutput("apt-get %s --print-uris -y install %s" % (self.options,
-                                                                   packages_str))
-        uris = self._parse_install_uris(raw)
-        if len(uris) == 0:
-            print "Package `%s' not found, below are the query results:" % packages[0]
+        raw = self._cmdget("-y install %s" % list2str(packages))
+        self._parse_install_uris(raw)
+        
+        if len(self.uris) == 0:
+            print "Package `%s' not found" % packages[0]
+            print "Querying index..."
             c = Cache(self.paths, self.options)
             c.query(packages[0], info=False, names=True, stats=False)
             abort()
 
         size = 0
         print "Packages to get:"
-        for uri in uris:
-            print "  " + basename(uri["url"])
-            size += int(uri['size'])
+        for uri in self.uris:
+            print "  " + uri.filename
+            size += uri.size
         
-        print "Amount of packages: %s" % len(uris)
-        if size < 1000000:
-            print "Need to get ~%iKB of archives" % (size/1024)
-        else:
-            print "Need to get ~%iMB of archives" % (size/(1024*1024))
+        print "Amount of packages: %i" % len(self.uris)
+        print "Need to get %s of archives" % pretty_size(size)
 
         if not force:
             print "Do you want to continue [y/N]?",
             if not raw_input() in ['Y', 'y']:
                 abort("aborted by user")
         
-        for uri in uris:
-            if tree:
-                getdir = dir + "/" + self._treepath(basename(uri["url"]))
-                mkdir_parents(getdir)
-            else:
-                getdir = dir
-            path = self._download(uri["url"], getdir)
-            if not self._md5sum(path) == uri["md5"]:
-                fatal("md5sum mismatch: %s" % path)
-            archive = self.paths["Dir::Cache::Archives"] + "/" + basename(path)
-            self._store(path, archive)
+        for uri in self.uris:
+            uri.get(dir, tree)
+            uri.md5_verify()
+            uri.archive(self.paths["Dir::Cache::Archives"])
+
     
 class Cache:
     """ class for controlling chanko container cache """

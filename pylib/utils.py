@@ -1,6 +1,7 @@
 # Copyright (c) 2010 Alon Swartz - all rights reserved
 
 import os
+import re
 import sys
 import commands
 import getpass
@@ -49,3 +50,24 @@ def join_dicts(dict1, dict2):
     for opt in dict2.keys():
         dict1[opt] = dict2[opt]
     return dict1
+
+def list2str(list):
+    lstr = ""
+    for l in list:
+        lstr = lstr + l + " "
+    return lstr
+
+def pretty_size(size):
+    if size < 1000000:
+        return "~%iKB" % (size/1024)
+    else:
+	return "~%iMB" % (size/(1024*1024))
+
+def treepath(file):
+    name = file.split("_")[0]
+    m = re.match("^lib(.*)", name)
+    if m:
+        prefix = "lib" + m.group(1)[0]
+    else:
+        prefix = name[0]
+    return prefix + "/" + name

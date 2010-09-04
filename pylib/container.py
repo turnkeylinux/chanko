@@ -53,9 +53,10 @@ class Container:
         self.paths = ContainerPaths()
 
     def container_check(self):
-        if not exists(self.paths.generic["Dir"]):
-            fatal("chanko container does not exist")
-    
+        cont = self.paths.generic["Dir"]
+        if not exists(cont):
+            fatal("chanko container does not exist: " + cont)
+
     def init_create(self, sourceslist, refresh):
         """ create the container on the filesystem """
         
