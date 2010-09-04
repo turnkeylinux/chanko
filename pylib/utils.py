@@ -71,3 +71,6 @@ def treepath(file):
     else:
         prefix = name[0]
     return prefix + "/" + name
+
+def md5sum(path):
+    return getoutput("md5sum %s | awk '{print $1}'" % path)

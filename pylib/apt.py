@@ -13,19 +13,32 @@ class Uri:
     def __init__(self, url):
         self.url = url
         self.filename = basename(url)
+        self.destfile = None
         self.tree = treepath(self.filename)
         self.path = None
         self.md5 = None
         self.size = 0
 
-    def get(self, dir, tree):
-        #reminder: update for sumo
-        if tree:
-            self.path = string.join([dir, self.tree, self.filename], "/")
+    def set_path(self, dir, tree=False):
+        if not dir:
+            raise Error("dir not passed for: " + self.url)
+        
+        if self.destfile:
+            filename = self.destfile
         else:
-            self.path = string.join([dir, self.filename], "/")
+            filename = self.filename
+        
+        if tree:
+            self.path = string.join([dir, self.tree, filename], "/")
+        else:
+            self.path = string.join([dir, filename], "/")
 
-        print "* getting: " + self.filename
+    def get(self, dir=None, tree=False):
+        #reminder: update for sumo
+        if not self.path:
+            self.set_path(dir, tree)
+            
+        print "* getting: " + basename(self.path)
         system("curl -L -f %s -o %s" % (self.url, self.path))
 
     def md5_verify(self):
@@ -34,8 +47,8 @@ class Uri:
         
         if not self.md5:
             fatal("no md5 set for: " + self.path)
-        
-        if not self.md5 == getoutput("md5sum %s | awk '{print $1}'" % self.path):
+
+        if not self.md5 == md5sum(self.path):
             fatal("md5sum verification failed: %s" % self.path)
         
     def archive(self, archive_path):
@@ -57,16 +70,15 @@ class Get:
         return getoutput("apt-get %s --print-uris %s" % (self.options, opts))
     
     def _parse_update_uris(self, raw):
-        uris = []
+        self.uris = []
         for uri in raw.split("\n"):
             m = re.match("\'(.*)\' (.*) 0", uri)
             if m:
                 if not re.match("(.*)Translation(.*)", m.group(1)):
-                    uri = {'url':  m.group(1),
-                           'file': m.group(2)
-                          }
-                    uris.append(uri)
-        return uris
+                    uri = Uri(m.group(1))
+                    uri.destfile = m.group(2)
+
+                    self.uris.append(uri)
 
     def _parse_install_uris(self, raw):
         self.uris = []
@@ -82,45 +94,39 @@ class Get:
                 
                 self.uris.append(uri)
     
-    def _md5sum(self, path):
-        return getoutput("md5sum %s | awk '{print $1}'" % path)
-
-    def _download(self, url, dir, filename=None):
-        if filename:
-            dst = dir + "/" + filename
-        else:
-            dst = dir + "/" + basename(url)
-        
-        print "* getting: %s" % basename(dst)
-        system("curl -L -f %s -o %s" % (url, dst))
-        return dst
-
     def update(self):
         raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
-        for uri in uris:
-            if basename(uri["url"]) == "Release.gpg":
-                #reminder: get release.gpg and check integrity
-                self._download(re.sub(".gpg", "", uri["url"]),
-                               self.paths["Dir::State::Lists"],
-                               re.sub(".gpg", "", uri["file"]))
+        for uri in self.uris:
+            if uri.filename == "Release.gpg":
+                release_uri = Uri(re.sub(".gpg", "", uri.url))
+                release_uri.destfile = re.sub(".gpg", "", uri.destfile)
+                release_uri.get(self.paths["Dir::State::Lists"])
+                
+                #reminder: get release.gpg and verifyrelease integrity
+                #uri.get(self.paths["Dir::State::Lists"])
+                #uri.gpg_verify...
 
-        for uri in uris:
-            if basename(uri["url"]) == "Packages.bz2":
-                path = self.paths["Dir::State::Lists"] + "/" + uri["file"]
-                if isfile(path):
-                    m = re.match("(.*)_(.*)_(.*)_Packages", uri["file"])
-                    if m:
-                        rel = "%s/%s%s" % (self.paths["Dir::State::Lists"], m.group(1), "_Release")
-                        cmd = "grep -q %s %s" % (self._md5sum(path), rel)
-                        if not getstatus(cmd):
-                            continue
-
-                self._download(uri["url"],
-                               self.paths["Dir::State::Lists"],
-                               (uri["file"] + ".bz2"))
-                system("bzcat %s > %s" % ((path + ".bz2"), path))
+        for uri in self.uris:
+            if uri.filename == "Packages.bz2":
+                updated = True
+                unpacked = uri.destfile
+                uri.destfile = uri.destfile + ".bz2"
+                lists = self.paths["Dir::State::Lists"]
+                uri.set_path(lists)
+                
+                m = re.match("(.*)_(.*)_(.*)_Packages.bz2", uri.destfile)
+                if m and isfile(uri.path):
+                    release = "%s/%s_%s" % (lists, m.group(1), "Release")
+                    md5 = md5sum(uri.path)
+                    for line in file(release).readlines():
+                        if re.search(md5, line):
+                            updated = False
+                            break
+                if updated:
+                    uri.get()
+                    system("bzcat %s > %s" % (uri.path, (lists+"/"+unpacked)))
 
     def install(self, packages, dir, tree, force):
         raw = self._cmdget("-y install %s" % list2str(packages))
