@@ -29,9 +29,6 @@ import help
 def usage():
     print >> sys.stderr, "Syntax: %s (-r | -l) [-options] [package_glob]" % sys.argv[0]
 
-def warn(s):
-    print >> sys.stderr, "warning: " + str(s)
-
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "rl",
