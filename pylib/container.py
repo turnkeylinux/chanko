@@ -51,6 +51,10 @@ class Container:
     
     def __init__(self):
         self.paths = ContainerPaths()
+
+    def container_check(self):
+        if not exists(self.paths.generic["Dir"]):
+            fatal("chanko container does not exist")
     
     def init_create(self, sourceslist, refresh):
         """ create the container on the filesystem """
@@ -96,10 +100,7 @@ class Container:
         return apt.Cache(paths, self.paths.local_opts)
 
     def refresh(self, remote, local):
-        """ resynchronize remote / refresh local index files and caches """
-
-        if not exists(self.paths.generic["Dir"]):
-            fatal("chanko container does not exist")
+        self.container_check()
         
         if remote:
             cache = self._remote_cache()
@@ -112,6 +113,8 @@ class Container:
     def query(self, remote, local, package, 
               info=False, names=False, stats=False):
 
+        self.container_check()
+        
         if remote:
             cache = self._remote_cache()
             cache.query(package, info, names, stats)
@@ -125,6 +128,8 @@ class Container:
                 print "container empty"
 
     def get(self, packages, dir=None, tree=False, force=False):
+        self.container_check()
+        
         if not dir:
             dir = self.paths.path
         get = self._remote_get()
