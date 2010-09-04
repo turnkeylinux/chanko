@@ -11,6 +11,11 @@ class Error(Exception):
 def warn(s):
     print >> sys.stderr, "warning: " + str(s)
 
+def fatal(s):
+    print >> sys.stderr
+    print >> sys.stderr, "FATAL: " + str(s)
+    sys.exit(1)
+
 def abort(s=None):
     if s:
         print >> sys.stderr, str(s)

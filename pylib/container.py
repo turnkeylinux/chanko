@@ -56,10 +56,10 @@ class Container:
         """ create the container on the filesystem """
         
         if not exists(sourceslist):
-            raise Error("no such sources.list '%s'" % sourceslist)
+            fatal("no such sources.list '%s'" % sourceslist)
         
         if exists(self.paths.generic["Dir"]):
-            raise Error("container already created")
+            fatal("container already created")
         
         mkdir_parents(self.paths.generic["Dir::Etc"])
         mkdir_parents(self.paths.generic["Dir::State"])
@@ -104,7 +104,7 @@ class Container:
         """ resynchronize remote / refresh local index files and caches """
 
         if not exists(self.paths.generic["Dir"]):
-            raise Error("chanko container does not exist")
+            fatal("chanko container does not exist")
         
         if remote:
             cache = self._remote_cache()

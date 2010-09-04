@@ -138,7 +138,7 @@ class Get:
                 getdir = dir
             path = self._download(uri["url"], getdir)
             if not self._md5sum(path) == uri["md5"]:
-                raise Error("md5sum mismatch: %s" % path)
+                fatal("md5sum mismatch: %s" % path)
             archive = self.paths["Dir::Cache::Archives"] + "/" + basename(path)
             self._store(path, archive)
     
