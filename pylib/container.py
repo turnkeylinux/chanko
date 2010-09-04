@@ -121,7 +121,8 @@ class Container:
             cache.query(package, info, names, stats)
         
         if local:
-            pkg_cache = self.paths.local["Dir::State::Lists"] + "/_dists_local_debs_binary-i386_Packages"
+            pkg_cache = self.paths.local["Dir::State::Lists"] + \
+                        "/_dists_local_debs_binary-i386_Packages"
             if exists(pkg_cache) and getsize(pkg_cache) > 0:
                 cache = self._local_cache()
                 cache.query(package, info, names, stats)
