@@ -83,21 +83,16 @@ class Container:
         else:
             print "chanko sources.list: " + self.paths.remote("Dir::Etc::SourceList")
 
-    def _join_dicts(self, dict1, dict2):
-        for opt in dict2.keys():
-            dict1[opt] = dict2[opt]                
-        return dict1
-    
     def _remote_get(self):
-        paths = self._join_dicts(self.paths.generic, self.paths.remote)
+        paths = join_dicts(self.paths.generic, self.paths.remote)
         return apt.Get(paths, self.paths.remote_opts)
 
     def _remote_cache(self):
-        paths = self._join_dicts(self.paths.generic, self.paths.remote)
+        paths = join_dicts(self.paths.generic, self.paths.remote)
         return apt.Cache(paths, self.paths.remote_opts)
 
     def _local_cache(self):
-        paths = self._join_dicts(self.paths.generic, self.paths.local)
+        paths = join_dicts(self.paths.generic, self.paths.local)
         return apt.Cache(paths, self.paths.local_opts)
 
     def refresh(self, remote, local):

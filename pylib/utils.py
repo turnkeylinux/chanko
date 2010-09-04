@@ -45,3 +45,7 @@ def getstatus(command):
     (s,o) = commands.getstatusoutput(command)
     return s
 
+def join_dicts(dict1, dict2):
+    for opt in dict2.keys():
+        dict1[opt] = dict2[opt]
+    return dict1
