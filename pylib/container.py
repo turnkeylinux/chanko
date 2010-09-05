@@ -2,141 +2,91 @@
 
 import os
 import re
+import shutil
 import string
+import random
 import commands
 from os.path import *
 
 from utils import *
-import apt
+from paths import Paths
+from apt import Apt
 
-class ContainerPaths:
+def realpath(path):
+    """prevent realpath from following a symlink for basename component of path"""
+    if basename(path) in ('', '.', '..'):
+        return os.path.realpath(path)
+
+    return join(os.path.realpath(dirname(path)), basename(path))
+
+def randomkey():
+    return str(random.randint(100000000000, 999999999999))
+    
+class ContainerPaths(Paths):
     def __init__(self, path=None):
         if path is None:
-            path = os.getenv('CHANKO_DIR', os.getcwd())
+            path = os.getenv('CHANKO_BASE', os.getcwd())
 
-        self.path = realpath(path)
-        base = self.path + "/.chanko/"
+        self.chanko_base = path
+        
+        path = realpath(path)
+        self.base = path + "/.container/"
 
-        self.generic = {'Dir':                  base,
-                        'Dir::Etc':             base + "config/",
-                        'Dir::State':           base + "state/apt",
-                        'Dir::State::status':   base + "state/dpkg/status"
-                       }
-        
-        self.remote =  {'Dir::Cache':           base + "cache/remote",
-                        'Dir::Cache::Archives': base + "cache/remote/archives",
-                        'Dir::State::Lists':    base + "cache/remote/lists",
-                        'Dir::Etc::SourceList': base + "config/sources.list"
-                       }
-
-        self.local =   {'Dir::Cache':           base + "cache/local",
-                        'Dir::Cache::Archives': base + "cache/remote/archives",
-                        'Dir::State::Lists':    base + "cache/local/lists",
-                        'Dir::Etc::SourceList': base + "cache/local/sources.list"
-                       }
-        
-        generic_opts = self._generate_opts(self.generic)
-        self.remote_opts = generic_opts + self._generate_opts(self.remote)
-        self.local_opts  = generic_opts + self._generate_opts(self.local)
-    
-    def _generate_opts(self, dict):
-        opts = ""
-        for opt in dict.keys():
-            opts = opts + "-o %s=%s " % (opt, dict[opt])
-        
-        return opts
+        Paths.__init__(self, self.base, ['config', 'archives'])
+        self.config = Paths(self.config, ['sources.list', 'hash', 'arch'])
 
 class Container:
     """ class for creating and controlling a chanko container """
-    
-    def __init__(self):
-        self.paths = ContainerPaths()
-
-    def container_check(self):
-        cont = self.paths.generic["Dir"]
-        if not exists(cont):
-            fatal("chanko container does not exist: " + cont)
 
     def init_create(self, sourceslist, refresh):
         """ create the container on the filesystem """
         
         if not exists(sourceslist):
             fatal("no such sources.list '%s'" % sourceslist)
-        
-        if exists(self.paths.generic["Dir"]):
-            fatal("container already created")
-        
-        mkdir_parents(self.paths.generic["Dir::Etc"])
-        mkdir_parents(self.paths.generic["Dir::State"])
 
-        mkdir_parents(dirname(self.paths.generic["Dir::State::status"]))
-        file(self.paths.generic["Dir::State::status"], "w").write("")
-        
-        for path in [self.paths.remote, self.paths.local]:
-            mkdir_parents(path["Dir::Cache"])
-            mkdir_parents(path["Dir::Cache::Archives"] + "/partial")
-            mkdir_parents(path["Dir::State::Lists"]+ "/partial")
+        if exists(self.paths.base):
+            fatal("container already exists: " + self.paths.base)
 
-        r_sources = file(sourceslist).read()
-        file(self.paths.remote["Dir::Etc::SourceList"], "w").write(r_sources)
-        
-        l_sources = "deb file:/// local debs"
-        file(self.paths.local["Dir::Etc::SourceList"], "w").write(l_sources)
+        mkdir_parents(self.paths.config)
+        mkdir_parents(self.paths.archives + "/partial")
 
+        shutil.copyfile(sourceslist, self.paths.config.sources_list)
+        
+        file(self.paths.config.hash, "w").write(randomkey())
+        
         if refresh:
+            self.apt = Apt(self.paths, create=True)
             self.refresh(remote=True, local=False)
         else:
-            print "chanko sources.list: " + self.paths.remote("Dir::Etc::SourceList")
+            print "chanko sources.list: " + self.paths.config.sources_list
 
-    def _remote_get(self):
-        paths = join_dicts(self.paths.generic, self.paths.remote)
-        return apt.Get(paths, self.paths.remote_opts)
-
-    def _remote_cache(self):
-        paths = join_dicts(self.paths.generic, self.paths.remote)
-        return apt.Cache(paths, self.paths.remote_opts)
-
-    def _local_cache(self):
-        paths = join_dicts(self.paths.generic, self.paths.local)
-        return apt.Cache(paths, self.paths.local_opts)
+    def __init__(self, create=False):
+        self.paths = ContainerPaths()
+        if not isdir(self.paths.base) and not create:
+            fatal("chanko container does not exist: " + self.paths.base)
+        
+        if not create:
+            self.apt = Apt(self.paths)
 
     def refresh(self, remote, local):
-        self.container_check()
-        
         if remote:
-            cache = self._remote_cache()
-            cache.refresh()
+            self.apt.remote_cache.refresh()
         
         if local:
-            cache = self._local_cache()
-            cache.refresh()
+            self.apt.local_cache.refresh()
             
-    def query(self, remote, local, package, 
-              info=False, names=False, stats=False):
-
-        self.container_check()
-        
+    def query(self, remote, local, package, info=False, names=False, stats=False):
         if remote:
-            cache = self._remote_cache()
-            cache.query(package, info, names, stats)
+            self.apt.remote_cache.query(package, info, names, stats)
         
         if local:
-            pkg_cache = self.paths.local["Dir::State::Lists"] + \
-                        "/_dists_local_debs_binary-i386_Packages"
-            if exists(pkg_cache) and getsize(pkg_cache) > 0:
-                cache = self._local_cache()
-                cache.query(package, info, names, stats)
-            else:
-                print "container empty"
+            self.apt.local_cache.query(package, info, names, stats)
 
     def get(self, packages, dir=None, tree=False, force=False):
-        self.container_check()
-        
         if not dir:
-            dir = self.paths.path
-        get = self._remote_get()
-        get.install(packages, dir, tree, force)
-        
-        #refresh local cache so it can be queried
-        self.refresh(remote=False, local=True)
+            dir = self.paths.chanko_base
+
+        self.apt.get.install(packages, dir, tree, force)
+        self.apt.local_cache.refresh()
+
         

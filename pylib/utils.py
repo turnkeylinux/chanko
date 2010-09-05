@@ -24,6 +24,7 @@ def abort(s=None):
 
 def mkdir_parents(path, mode=0777):
     """mkdir 'path' recursively (I.e., equivalent to mkdir -p)"""
+    path = str(path)
     dirs = path.split("/")
     for i in range(2, len(dirs) + 1):
         dir = "/".join(dirs[:i+1])

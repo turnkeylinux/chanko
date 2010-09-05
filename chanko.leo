@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.325643300799">
+<globals body_outline_ratio="0.486246672582">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -576,7 +576,7 @@ Current data structure
 Proposed data structure
 -----------------------
 
-~/.chanko/
+~/.chanko/                          # CHANKO_HOME
     caches/
         65sf36d6sdfs4dfsgdfs/
             local/
@@ -590,7 +590,7 @@ Proposed data structure
         dpkg/
 
 
-arena/.container/
+arena/.container/                   # CHANKO_BASE
     config/
         sources.list
         arch
@@ -598,6 +598,17 @@ arena/.container/
     archives/               # leverage sumo-cp -l (hardlink copy)
 
 
-</t>
+
+implementation
+
+* use new data structure
+    * init should only create .container
+    * refresh (cache init) should have init_create (and run it if it doesn't exist)
+        Q: who/when should state/dpkg be created...
+
+* consider using Paths class
+    
+    
+    </t>
 </tnodes>
 </leo_file>
