@@ -285,42 +285,37 @@ class Cache:
             self._cmdcache("stats")
 
 class Apt:
-    def init_create(self, path):
-        paths = CachePaths(path)
-        
-        mkdir_parents(join(paths.local.lists, "partial"))
-        mkdir_parents(join(paths.remote.lists,"partial"))
-    
     def __init__(self, container, create=False):
         home = os.environ.get("CHANKO_HOME",
                               join(os.environ.get("HOME"), ".chanko"))
         path = join(home, "caches", file(container.config.hash).read())
 
-        self.paths = CachePaths(path)
-        self.state = State(join(home, "state"))
-        self.options = CacheOptions(container, self.paths, self.state.paths)
+        paths = CachePaths(path)
+        state = State(join(home, "state"))
+        options = CacheOptions(container, paths, state.paths)
         
-        if (not isdir(str(self.paths.local)) or 
-            not isdir(str(self.paths.remote))):
+        if (not isdir(str(paths.local)) or 
+            not isdir(str(paths.remote))):
                 
             if create:
-                self.init_create(path)
+                mkdir_parents(join(paths.local.lists, "partial"))
+                mkdir_parents(join(paths.remote.lists,"partial"))
             else:
                 fatal("no cache found at" + path)
         
         sourceslist = "deb file:/// local debs"
-        file(self.paths.local.sources_list, "w").write(sourceslist)
+        file(paths.local.sources_list, "w").write(sourceslist)
         
-        self.remote_cache = Cache(self.paths.remote,
-                                  self.options.remote,
+        self.remote_cache = Cache(paths.remote,
+                                  options.remote,
                                   container.archives)
                                   
-        self.local_cache  = Cache(self.paths.local,
-                                  self.options.local,
+        self.local_cache  = Cache(paths.local,
+                                  options.local,
                                   container.archives)
                                   
-        self.get = Get(self.paths.remote,
-                       self.options.remote,
+        self.get = Get(paths.remote,
+                       options.remote,
                        container.archives)
 
 
