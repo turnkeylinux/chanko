@@ -7,7 +7,7 @@ If a specific package version is requested, get that
 If a specific version is not requested, retrieve the newest version
 
 Options:
-  --dir=         Directory in which to store the package, default is CHANKO_DIR
+  --dir=         Directory in which to store the package, default is CHANKO_BASE
   --tree         Output dir in package tree format (like automatic repository)
                      $dir/c/chanko/chanko-<version>.<arch>.deb
                  instead of
