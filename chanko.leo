@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.308784383319">
+<globals body_outline_ratio="0.27240461402">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -13,11 +13,16 @@
 <v t="loni.20100902123045.1" a="E"><vh>design</vh>
 <v t="loni.20100902123045.2"><vh>brainstorming</vh></v>
 <v t="loni.20100902123045.3"><vh>file/data structure</vh></v>
-<v t="loni.20100902123045.4"><vh>cli syntax</vh></v>
+<v t="loni.20100902123045.4"><vh>cli syntax</vh>
+<v t="loni.20100906194713"><vh>init</vh></v>
+<v t="loni.20100906194713.1"><vh>refresh</vh></v>
+<v t="loni.20100906194713.2"><vh>query</vh></v>
+<v t="loni.20100906194713.3"><vh>get</vh></v>
+</v>
 <v t="loni.20100902123045.5"><vh>usage examples</vh></v>
 </v>
-<v t="loni.20100902123045.6" a="E"><vh>implementation</vh>
-<v t="loni.20100902123045.7" a="M"><vh>create test environment</vh>
+<v t="loni.20100902123045.6" a="ETV"><vh>implementation</vh>
+<v t="loni.20100902123045.7"><vh>create test environment</vh>
 <v t="loni.20100902123045.8"><vh>conf</vh></v>
 <v t="loni.20100902123045.9"><vh>init</vh></v>
 <v t="loni.20100902123045.10"><vh>refresh-r</vh></v>
@@ -28,12 +33,12 @@
 </v>
 <v t="loni.20100902180534"><vh>refresh</vh></v>
 <v t="loni.20100903152430"><vh>query</vh></v>
-<v t="loni.20100904214912" a="E"><vh>sumo integration</vh>
+<v t="loni.20100904214912"><vh>sumo integration</vh>
 <v t="loni.20100904214912.1"><vh>use case</vh></v>
 <v t="loni.20100904215050"><vh>file/data structure</vh></v>
 <v t="loni.20100906132825"><vh>downloading</vh></v>
 </v>
-<v t="loni.20100906132825.1" a="TV"><vh>global packages/releases</vh></v>
+<v t="loni.20100906132825.1"><vh>global packages/releases</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -64,7 +69,8 @@ A:  chanko
     
     chanko leverages sumo, hence the perfect name
 
-
+Q: how do i describe this project
+A: efficiently get packages from public sources to be shared via sumo
 
 leverage apt?
     interface directly with apt-get|cache
@@ -125,132 +131,74 @@ test: python-apt
     </t>
 <t tx="loni.20100902123045.3">FILE/DATA STRUCTURE
 
-.chanko/
-    config/
-        sources.list
-    cache/
-        local/
-            sources.list
-            pkgcache.bin
-            archives/        
-            lists/
-        remote/
-            pkgcache.bin
-            archives/        
-            lists/
+CHANKO_HOME
+-----------
+~/.chanko/
+    caches/
+        65sf36d6sdfs4dfsgdfs/
+            local/
+                sources.list
+                pkgcache.bin
+                lists/
+            remote/
+                pkgcache.bin
+                lists/
+                    &lt;softlinks to global&gt;
+        global/
+            ...Packages.bz2
+            ...Packages
+            ...Releases
+
     state/
         dpkg/
 
+CHANKO_BASE
+-----------
+arena/.container/
+    config/
+        sources.list
+        hash
+    archives/
 
-
-GENERIC     Dir                         -&gt; $BASE/                           # BASE="`pwd`/.chanko"
-GENERIC     Dir::Etc                    -&gt; config/
-REMOTE      Dir::Cache                  -&gt; cache/remote
-LOCAL       Dir::Cache                  -&gt; cache/local
-LOCAL       Dir::Etc::SourceList        -&gt; $BASE/cache/local/sources.list   # created on the fly...
-GENERIC     Dir::State                  -&gt; state/apt/
-REMOTE      Dir::State::Lists           -&gt; $BASE/cache/remote/lists
-LOCAL       Dir::State::Lists           -&gt; $BASE/cache/local/lists
-GENERIC     Dir::State::status          -&gt; $BASE/state/dpkg/status
 
 </t>
 <t tx="loni.20100902123045.4">CLI SYNTAX
 
-chanko-init [/path/to/sources.list]
-    initialize a new chanko container
-    if sources.list is specified, post initialization the chanko will be refreshed.
-    if --dummy is specified, a dummy sources.list will be created, and the user will
+Syntax: chanko &lt;command&gt; [args]
 
-chanko-refresh [-r | -l]
-    refresh/resynchronize the package index files and cache as specified in sources.list
-    by default, both remote and local will be refreshed
+Configuration environment variables:
+    CHANKO_HOME    Location of caches storage (default: $HOME/.chanko)
+    CHANKO_BASE    Location of sumo arena (defaults to cwd)
 
-    Arguments:
-        -r --remote
-            refresh remote cache
-    
-        -l --local
-            refresh local cache
-
-chanko-get [-options] package[=version] ...
-    get package(s) and their dependencies
-        if a specific package version is requested, get that
-        if a specific version is not requested, retrieve the newest version
-    
-    -f --force
-        dont ask for confirmation before downloading
-    
-    -d --dir
-        directory in which to store the package, default is CHANKO_DIR
-
-    -t --tree
-        output dir is in package tree format (like an automatic repository)
-            $dir/n/neverland/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-
-        instead of
-            $dir/neverland-&lt;version&gt;.&lt;arch&gt;.deb
-
-chanko-query (-r | -l) [-options] [package_glob]
-    if package_glob is provided, print only those packages whose names match the glob
-    otherwise, by default, print a list of all packages
-    
-    Arguments:
-        -r --remote
-            query remote packages
-    
-        -l --local
-            query local packages stored in the container
-
-    Options:
-        -i --info
-            print full package information
-
-        -a --all-versions
-            print all available versions of a package
-        
-        -n --name-only
-            print only the names of packages (without the package summary)
-            incompatible with -info option
-
-
-FUTURE 
-
-upgrade
-    get newest versions of packages in container
-
-get options
-    --source         # get source tarball (and diff)
-    --build-dep      # get source package build-dependencies
-
-add
-    add manually downloaded deb so chanko knows about them
-
-remove
-    remove package
-
-purge
-    remove packages that are no longer needed which were pulled in to satisfy dependencies
-
+Commands:
+    get        Get package(s) and their dependencies
+    init       Initialize a new chanko container
+    query      Query chanko container
+    refresh    Refresh chanko container index files and cache
 
 
 
 </t>
-<t tx="loni.20100902123045.5">cd prestine/karmic-i386
+<t tx="loni.20100902123045.5">cd /turnkey/fab/chanko
+mkdir rocky
+cd rocky
+
+sumo-init
+sumo-open
+cd arena
 
 chanko-init --dummy
-    initialize a new container with a dummy sources.list
-    
-xjed .chanko/config/sources.list
-    update sources list to my liking...
-        eg. deb http://archive.ubuntu.com/ubuntu jaunty main
+xjed .container/config/sources.list     # update sources list manually
+chanko-refresh -r                       # would have been done automatically if we init from sources.list
 
-chanko-refresh
-    refresh/resynchronize the package index files and cache as specified in sources.list
-    why? because we initialized with a dummy sources.list
+chanko-query -r                         # print list of all packages with short description
+chanko-query -r git                     # print list of all packages with short description that match git glob
+chanko-query -r --info git-core         # print info of qgit
 
-chanko-query ...
+chanko-get --tree git-core=1.2.3        # get package git-core (version 1.2.3) with dependencies and store them
+                                          in a tree like format
 
-chanko-get ...
+chanko-query -l                         # print list of all local packages
 
 
 </t>
@@ -473,9 +421,36 @@ apt-cache $L_OPTIONS $@
 
 
 </t>
-<t tx="loni.20100902123045.15">* clean up and refactor code
+<t tx="loni.20100902123045.15">* set up packaging support
+    depends: sumo, curl, bzcat
 
-* update design with latest information
+* write release notes for v0.5
+
+* arch
+
+* verify Release files (gpg)
+
+
+FUTURE 
+
+upgrade
+    get newest versions of packages in container
+
+get options
+    --source         # get source tarball (and diff)
+    --build-dep      # get source package build-dependencies
+
+add
+    add manually downloaded deb so chanko knows about them
+
+remove
+    remove package
+
+purge
+    remove packages that are no longer needed which were pulled in to satisfy dependencies
+
+
+
 </t>
 <t tx="loni.20100902180534">flow:
     * get list of index files to download from sources.list
@@ -673,6 +648,59 @@ A: it doesn't actually matter - they will have to be downloaded anyway
             *Releases
     state/
         dpkg/
+
+</t>
+<t tx="loni.20100906194713">Syntax: init /path/to/sources.list | --dummy
+Initialize a new chanko container
+
+If sources.list is specified, it will be used and the container will be
+refreshed post initialization.
+
+If --dummy is specified, an exemplary sources.list will be created.
+
+
+</t>
+<t tx="loni.20100906194713.1">Syntax: refresh (-r | -l | -a)
+Refresh chanko container index files and cache
+
+Arguments:
+  -r  --remote   Resynchronize remote index files and refresh remote cache
+  -l  --local    Regenerate local index and refresh local cache
+  -a  --all      Refresh both remote and local
+
+</t>
+<t tx="loni.20100906194713.2">Syntax: query (-r | -l) [-options] [package_glob]
+Query chanko container
+
+If package_glob is provided, print only those packages whose names match the
+glob otherwise, by default, print a list of all packages
+
+Arguments:
+  -r  --remote   Query remote packages
+  -l  --local    Query local packages stored in the container
+
+Options:
+  --info         Print full package information
+                 Incompatible with --names option
+  --names        Print only the names of packages (without the package summary)
+                 Incompatible with --info option
+  --stats        Print statistics of the remote/local cache
+
+</t>
+<t tx="loni.20100906194713.3">Syntax: get [-options] package[=version] ...
+Get package(s) and their dependencies
+
+If a specific package version is requested, get that
+If a specific version is not requested, retrieve the newest version
+
+Options:
+  --dir=         Relative directory path to CHANKO_BASE for package storage
+                 Default is CHANKO_BASE
+  --tree         Package storage in tree format (resembles automatic repository)
+                     $dir/c/chanko/chanko-&lt;version&gt;.&lt;arch&gt;.deb
+                 instead of
+                     $dir/chanko-&lt;version&gt;.&lt;arch&gt;.deb
+  --force        Dont ask for confirmation before downloading
 
 </t>
 </tnodes>
