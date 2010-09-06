@@ -10,7 +10,21 @@
 <find_panel_settings/>
 <vnodes>
 <v t="loni.20100902123045" a="E"><vh>Project</vh>
-<v t="loni.20100902123045.1" a="E"><vh>design</vh>
+<v t="loni.20100906222353" a="E"><vh>documentation</vh>
+<v t="loni.20100906222353.1" a="TV"><vh>initial release</vh></v>
+</v>
+<v t="loni.20100902123045.6" a="E"><vh>implementation</vh>
+<v t="loni.20100906214807" a="E"><vh>v0.5 - initial release</vh>
+<v t="loni.20100902123045.7"><vh>exploration</vh>
+<v t="loni.20100902123045.8"><vh>conf</vh></v>
+<v t="loni.20100902123045.9"><vh>init</vh></v>
+<v t="loni.20100902123045.10"><vh>refresh-r</vh></v>
+<v t="loni.20100902123045.11"><vh>refresh-l</vh></v>
+<v t="loni.20100902123045.12"><vh>get</vh></v>
+<v t="loni.20100902123045.13"><vh>query-r</vh></v>
+<v t="loni.20100902123045.14"><vh>query-l</vh></v>
+</v>
+<v t="loni.20100902123045.1"><vh>design</vh>
 <v t="loni.20100902123045.2"><vh>brainstorming</vh></v>
 <v t="loni.20100902123045.3"><vh>file/data structure</vh></v>
 <v t="loni.20100902123045.4"><vh>cli syntax</vh>
@@ -21,24 +35,17 @@
 </v>
 <v t="loni.20100902123045.5"><vh>usage examples</vh></v>
 </v>
-<v t="loni.20100902123045.6" a="ETV"><vh>implementation</vh>
-<v t="loni.20100902123045.7"><vh>create test environment</vh>
-<v t="loni.20100902123045.8"><vh>conf</vh></v>
-<v t="loni.20100902123045.9"><vh>init</vh></v>
-<v t="loni.20100902123045.10"><vh>refresh-r</vh></v>
-<v t="loni.20100902123045.11"><vh>refresh-l</vh></v>
-<v t="loni.20100902123045.12"><vh>get</vh></v>
-<v t="loni.20100902123045.13"><vh>query-r</vh></v>
-<v t="loni.20100902123045.14"><vh>query-l</vh></v>
-</v>
+<v t="loni.20100906215012"><vh>implementation</vh>
 <v t="loni.20100902180534"><vh>refresh</vh></v>
 <v t="loni.20100903152430"><vh>query</vh></v>
-<v t="loni.20100904214912"><vh>sumo integration</vh>
+<v t="loni.20100904214912" a="E"><vh>sumo integration</vh>
 <v t="loni.20100904214912.1"><vh>use case</vh></v>
 <v t="loni.20100904215050"><vh>file/data structure</vh></v>
 <v t="loni.20100906132825"><vh>downloading</vh></v>
 </v>
 <v t="loni.20100906132825.1"><vh>global packages/releases</vh></v>
+</v>
+</v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -203,7 +210,8 @@ chanko-query -l                         # print list of all local packages
 
 </t>
 <t tx="loni.20100902123045.6"></t>
-<t tx="loni.20100902123045.7">
+<t tx="loni.20100902123045.7">CREATE TEST ENVIRONMENT
+
 * create and document apt configuration
     * create prototype shell scripts for testing
 
@@ -421,9 +429,7 @@ apt-cache $L_OPTIONS $@
 
 
 </t>
-<t tx="loni.20100902123045.15">* set up packaging support
-    depends: sumo, curl, bzcat
-
+<t tx="loni.20100902123045.15">
 * write release notes for v0.5
 
 * arch
@@ -701,6 +707,110 @@ Options:
                  instead of
                      $dir/chanko-&lt;version&gt;.&lt;arch&gt;.deb
   --force        Dont ask for confirmation before downloading
+
+</t>
+<t tx="loni.20100906214807"></t>
+<t tx="loni.20100906215012"></t>
+<t tx="loni.20100906222353"></t>
+<t tx="loni.20100906222353.1">CHANKO: efficiently get packages from public sources to be shared via sumo
+
+Chanko, short for chanko-nabe, which is a stew (a type of nabemono or one-pot dish) commonly eaten in vast quantity by sumo wrestlers as part of a weight gain diet.
+
+Chanko leverages sumo to share the public data sets it gets, hence the perfect name. in other words, chanko feeds sumo...
+
+Chanko has 4 basic commands,
+    init        initialize a new chanko container
+    refresh     refresh chanko container index files and cache
+    query       query chanko container
+    get         get package(s) and their dependencies
+
+and can be configured via 2 environment variables:
+    CHANKO_HOME    Location of caches storage (default: $HOME/.chanko)
+    CHANKO_BASE    Location of sumo arena (defaults to cwd)
+
+Below is a basic overview of these commands, for more information consult the design notes, help from the commands themselves, or the source.
+
+A chanko container should be initialized inside of a sumo arena, eg.
+
+$ cd /turnkey/fab/chanko
+$ mkdir rocky
+$ cd rocky
+
+$ sumo-init
+$ sumo-open
+$ cd arena
+    
+$ chanko-init --dummy
+
+Initializing a chanko container will create the directory structure as follows in the CHANKO_BASE:
+    
+.container/
+    config/
+        sources.list
+        hash
+    archives/
+
+Because we provided the dummy option, the sources.list in the config/ folder is a copy of the sources.list file found in /usr/share/chanko.
+
+We could have provided a path to our own sources.list to use, which would also automatically initiate a refresh of the remote index and cache.
+
+But, because we used the dummy option, we will edit the sources.list to our liking, and then manually refresh the remote index files and cache.
+
+Note: Remote refers to the remote sources specified in the sources.list file local refers to the packages "got" by chanko
+
+$ xjed .container/config/sources.list
+$ chanko-refresh -r
+
+The refreshing command with the -r (--remote) option resynchronize's the remote index files and refreshes the remote cache. It will store the downloaded files in the global cache so they may be shared by other containers. 
+
+The cache is created in CHANKO_HOME and the directory structure looks similar to this once in full use:
+    
+~/.chanko/
+    caches/
+        &lt;container_hash&gt;
+            local/
+                sources.list
+                pkgcache.bin
+                lists/
+            remote/
+                pkgcache.bin
+                lists/
+                    &lt;softlinks to global&gt;
+        global/
+            &lt;Packages.bz2&gt;
+            &lt;Packages&gt;
+            &lt;Releases&gt;
+
+    state/
+        dpkg/
+
+Now that our container has been "refreshed", we can use query.
+Here are some examples:
+
+$ chanko-query -r                  # print list of all packages with short description
+$ chanko-query -r git              # print list of all packages with short description that match git glob
+                                   
+$ chanko-query -r --info git-core  # print info of qgit
+
+Getting a package and its dependencies is as simple as:
+    
+$ chanko-get git-core
+
+We may specify the exact version to get, if we do not want the newest version, along with other options such as to store the packages in a tree like format.
+
+$ chanko-get --tree git-core=1.2.3
+
+Note: Each package's integrity is checked via an expected md5 checksum.
+
+The local container cache is refreshed automatically after a get operation.
+We can verify that we have "got" the packages we requested but printing a list of all local packages
+
+$ chanko-query -l
+
+As mentioned before, consult each commands help documentation for all available options.
+
+Enjoy.
+
 
 </t>
 </tnodes>
