@@ -3,7 +3,6 @@
 import os
 import re
 import errno
-import shutil
 from os.path import *
 
 from utils import *
@@ -19,6 +18,14 @@ class Uri:
         self.md5 = None
         self.size = 0
 
+    def _sumocmd(self, opts):
+        # CHANKO_BASE _should be_ equivalent to SUMO_BASE
+        # currently we have to chdir into SUMO_BASE, setting env doesn't work
+        cwd = os.getcwd()
+        os.chdir(os.getenv('CHANKO_BASE', cwd))
+        system("sumo-" + opts)
+        os.chdir(cwd)
+        
     def set_path(self, dir, tree=False):
         if not dir:
             raise Error("dir not passed for: " + self.url)
@@ -34,12 +41,14 @@ class Uri:
             self.path = join(dir, filename)
 
     def get(self, dir=None, tree=False):
-        #reminder: update for sumo
         if not self.path:
             self.set_path(dir, tree)
-            
-        print "* getting: " + basename(self.path)
-        system("curl -L -f %s -o %s" % (self.url, self.path))
+
+        print "* get: " + basename(self.path)
+        if re.match("(.*).deb", self.path):
+            self._sumocmd("get %s %s" % (self.url, self.path))
+        else:
+            system("curl -L -f %s -o %s" % (self.url, self.path))
 
     def md5_verify(self):
         if not self.path:
@@ -53,13 +62,7 @@ class Uri:
         
     def archive(self, archive_path):
         dest = join(archive_path, self.filename)
-        try:
-            os.link(self.path, dest)
-        except OSError, e:
-            if e[0] != errno.EXDEV:
-                raise e
-            warn("copying file into archive instead of hard-linking")
-            shutil.copyfile(path, dest)
+        self._sumocmd("cp -l %s %s" % (self.path, dest))
 
 class Get:
     def __init__(self, paths, options, archives):

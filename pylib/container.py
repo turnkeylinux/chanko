@@ -29,6 +29,8 @@ class ContainerPaths(Paths):
         self.chanko_base = path
         
         path = realpath(path)
+        os.environ['CHANKO_BASE'] = path
+        
         self.base = join(path, ".container/")
 
         Paths.__init__(self, self.base, ['config', 'archives'])

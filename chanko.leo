@@ -621,6 +621,16 @@ implementation
     
 * downloading Packages and Release files should be done directly with curl
 
+
+implementation
+    init sumo test arena
+    init chanko in test arena
+    manually test sumo-get and sumo-cp -l
+    update code...
+        GOTCHA: setting SUMO_BASE doesn't work as expected, we have to chdir
+    
+
+
 </t>
 <t tx="loni.20100906132825.1"></t>
 </tnodes>
