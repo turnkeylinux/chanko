@@ -9,6 +9,7 @@ PATH_BIN=$(prefix)/bin
 PATH_INSTALL=$(prefix)/lib/$(progname)
 PATH_INSTALL_LIB=$(PATH_INSTALL)/pylib
 PATH_INSTALL_LIBEXEC=$(PATH_INSTALL)/libexec
+PATH_INSTALL_SHARE=$(prefix)/share/$(progname)
 
 TRUEPATH_INSTALL=$(shell echo $(PATH_INSTALL) | sed -e 's/debian\/$(progname)//g')
 
@@ -62,6 +63,7 @@ execproxy: execproxy.c
 
 uninstall:
 	rm -rf $(PATH_INSTALL)
+	rm -rf $(PATH_INSTALL_SHARE)
 	rm -f $(PATH_BIN)/$(progname)
 
 	# delete links from PATH_BIN
@@ -72,8 +74,9 @@ _install: execproxy
 	@echo \*\* CONFIG: prefix = $(prefix) \*\*
 	@echo 
 
-	install -d $(PATH_BIN) $(PATH_INSTALL) $(PATH_INSTALL_LIB) $(PATH_INSTALL_LIBEXEC)
+	install -d $(PATH_BIN) $(PATH_INSTALL) $(PATH_INSTALL_LIB) $(PATH_INSTALL_LIBEXEC) $(PATH_INSTALL_SHARE)
 
+	cp -a contrib/* $(PATH_INSTALL_SHARE)
 	install -m 644 pylib/*.pyo $(PATH_INSTALL_LIB)
 	-install -m 755 libexec/* $(PATH_INSTALL_LIBEXEC)
 
