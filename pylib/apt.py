@@ -230,8 +230,11 @@ class Cache:
         # reminder: arch
         self.local_pkgcache = self.paths.lists + "/_dists_local_debs_binary-i386_Packages"
 
+    def _cmdcache(self, opts):
+        system("apt-cache %s %s" % (self.options, opts))
+    
     def generate(self):
-        system("apt-cache %s gencaches" % self.options)
+        self._cmdcache("gencaches")
 
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
@@ -248,34 +251,34 @@ class Cache:
                 
         if not package and not info and not names:
             # list all packages with short description
-            system("apt-cache %s search . | sort" % self.options)
+            self._cmdcache("search . | sort")
             
         elif not package and not info and names:
             # list all packages (without description)
-            system("apt-cache %s pkgnames | sort" % self.options)
+            self._cmdcache("pkgnames | sort")
             
         elif not package and info and not names:
             # list full package information on all packages
-            system("apt-cache %s dumpavail" % self.options)
+            self._cmdcache("dumpavail")
             
         elif package and not info and not names:
             # list all packages with short desc that match package_glob
-            system("apt-cache %s search %s | sort" % (self.options, package))
+            self._cmdcache("search %s | sort" % package)
 
         elif package and not info and names:
             # list all packages (without description) that match a package_glob
-            system("apt-cache %s pkgnames %s | sort" % (self.options, package))
+            self._cmdcache("pkgnames %s | sort" % package)
         
         elif package and info and not names:
             # list info on specific package
-            system("apt-cache %s show %s" % (self.options, package))
+            self._cmdcache("show %s" % package)
         
         else:
             print "options provided do not match a valid query"
             
         if stats:
             print
-            system("apt-cache %s stats" % self.options)
+            self._cmdcache("stats")
 
 class Apt:
     def init_create(self, path):
