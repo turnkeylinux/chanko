@@ -3,7 +3,6 @@
 import os
 import re
 import shutil
-import string
 import random
 import commands
 from os.path import *
@@ -30,7 +29,7 @@ class ContainerPaths(Paths):
         self.chanko_base = path
         
         path = realpath(path)
-        self.base = path + "/.container/"
+        self.base = join(path, ".container/")
 
         Paths.__init__(self, self.base, ['config', 'archives'])
         self.config = Paths(self.config, ['sources.list', 'hash', 'arch'])
@@ -48,7 +47,7 @@ class Container:
             fatal("container already exists: " + self.paths.base)
 
         mkdir_parents(self.paths.config)
-        mkdir_parents(self.paths.archives + "/partial")
+        mkdir_parents(join(self.paths.archives, "partial"))
 
         shutil.copyfile(sourceslist, self.paths.config.sources_list)
         

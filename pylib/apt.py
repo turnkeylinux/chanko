@@ -4,7 +4,6 @@ import os
 import re
 import errno
 import shutil
-import string
 from os.path import *
 
 from utils import *
@@ -30,9 +29,9 @@ class Uri:
             filename = self.filename
         
         if tree:
-            self.path = string.join([dir, self.tree, filename], "/")
+            self.path = join(dir, self.tree, filename)
         else:
-            self.path = string.join([dir, filename], "/")
+            self.path = join(dir, filename)
 
     def get(self, dir=None, tree=False):
         #reminder: update for sumo
@@ -53,7 +52,7 @@ class Uri:
             fatal("md5sum verification failed: %s" % self.path)
         
     def archive(self, archive_path):
-        dest = string.join([archive_path, self.filename], "/")
+        dest = join(archive_path, self.filename)
         try:
             os.link(self.path, dest)
         except OSError, e:
@@ -128,7 +127,7 @@ class Get:
                             break
                 if updated:
                     uri.get()
-                    system("bzcat %s > %s" % (uri.path, (lists+"/"+unpacked)))
+                    system("bzcat %s > %s" % (uri.path,(join(lists,unpacked))))
 
     def install(self, packages, dir, tree, force):
         raw = self._cmdget("-y install %s" % list2str(packages))
@@ -228,7 +227,8 @@ class Cache:
         self.archives = archives
         
         # reminder: arch
-        self.local_pkgcache = self.paths.lists + "/_dists_local_debs_binary-i386_Packages"
+        self.local_pkgcache = join(self.paths.lists, 
+                                   "_dists_local_debs_binary-i386_Packages")
 
     def _cmdcache(self, opts):
         system("apt-cache %s %s" % (self.options, opts))
@@ -241,7 +241,8 @@ class Cache:
             get = Get(self.paths, self.options, self.archives)
             get.update()
         else:
-            system("apt-ftparchive packages %s > %s" % (self.archives, self.local_pkgcache))
+            system("apt-ftparchive packages %s > %s" % (self.archives,
+                                                        self.local_pkgcache))
         self.generate()
 
     def query(self, package, info, names, stats):
@@ -284,17 +285,16 @@ class Apt:
     def init_create(self, path):
         paths = CachePaths(path)
         
-        mkdir_parents(paths.local.lists + "/partial")
-        mkdir_parents(paths.remote.lists + "/partial")
+        mkdir_parents(join(paths.local.lists, "partial"))
+        mkdir_parents(join(paths.remote.lists,"partial"))
     
     def __init__(self, container, create=False):
         home = os.environ.get("CHANKO_HOME",
                               join(os.environ.get("HOME"), ".chanko"))
-        path = os.path.join(home, "caches",
-                            file(container.config.hash).read())
+        path = join(home, "caches", file(container.config.hash).read())
 
         self.paths = CachePaths(path)
-        self.state = State(home + "/state")
+        self.state = State(join(home, "state"))
         self.options = CacheOptions(container, self.paths, self.state.paths)
         
         if (not isdir(str(self.paths.local)) or 
