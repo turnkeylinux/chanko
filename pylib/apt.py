@@ -25,6 +25,9 @@ class Uri:
         os.chdir(os.getenv('CHANKO_BASE', cwd))
         system("sumo-" + opts)
         os.chdir(cwd)
+
+    def set_destfile(self, destfile):
+        self.destfile = destfile
         
     def set_path(self, dir, tree=False):
         if not dir:
@@ -63,12 +66,18 @@ class Uri:
     def archive(self, archive_path):
         dest = join(archive_path, self.filename)
         self._sumocmd("cp -l %s %s" % (self.path, dest))
+        
+    def link(self, link_path):
+        dest = join(link_path, self.destfile)
+        if not islink(dest):
+            os.symlink(self.path, dest)
 
 class Get:
-    def __init__(self, paths, options, archives):
+    def __init__(self, paths, options, archives, gcache):
         self.paths = paths
         self.options = options
         self.archives = archives
+        self.gcache = gcache
 
     def _cmdget(self, opts):
         return getoutput("apt-get %s --print-uris %s" % (self.options, opts))
@@ -105,32 +114,38 @@ class Get:
         for uri in self.uris:
             if uri.filename == "Release.gpg":
                 release_uri = Uri(re.sub(".gpg", "", uri.url))
-                release_uri.destfile = re.sub(".gpg", "", uri.destfile)
-                release_uri.get(self.paths.lists)
+                release_uri.set_destfile(re.sub(".gpg", "", uri.destfile))
+                release_uri.get(self.gcache)
+                release_uri.link(self.paths.lists)
                 
-                #reminder: get release.gpg and verifyrelease integrity
-                #uri.get(self.paths["Dir::State::Lists"])
+                #reminder: get release.gpg and verify release integrity
+                #uri.get...
                 #uri.gpg_verify...
 
         for uri in self.uris:
             if uri.filename == "Packages.bz2":
                 updated = True
-                unpacked = uri.destfile
-                uri.destfile = uri.destfile + ".bz2"
-                lists = self.paths.lists
-                uri.set_path(lists)
+
+                uri.set_path(self.gcache)
+                uri.link(self.paths.lists)
                 
+                unpacked = uri.destfile
+                uri.set_destfile(uri.destfile + ".bz2")
+                uri.set_path(self.gcache)
+
                 m = re.match("(.*)_(.*)_(.*)_Packages.bz2", uri.destfile)
                 if m and isfile(uri.path):
-                    release = "%s/%s_%s" % (lists, m.group(1), "Release")
+                    release = join(self.paths.lists, m.group(1)) + "_Release"
                     md5 = md5sum(uri.path)
                     for line in file(release).readlines():
                         if re.search(md5, line):
                             updated = False
                             break
+
                 if updated:
                     uri.get()
-                    system("bzcat %s > %s" % (uri.path,(join(lists,unpacked))))
+                    system("bzcat %s > %s" % (uri.path,
+                                              join(self.gcache, unpacked)))
 
     def install(self, packages, dir, tree, force):
         raw = self._cmdget("-y install %s" % list2str(packages))
@@ -224,10 +239,11 @@ class CachePaths(Paths):
 class Cache:
     """ class for controlling chanko cache """
     
-    def __init__(self, paths, options, archives):
+    def __init__(self, paths, options, archives, gcache):
         self.paths = paths
         self.options = options
         self.archives = archives
+        self.gcache = gcache
         
         # reminder: arch
         self.local_pkgcache = join(self.paths.lists, 
@@ -241,7 +257,7 @@ class Cache:
 
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
-            get = Get(self.paths, self.options, self.archives)
+            get = Get(self.paths, self.options, self.archives, self.gcache)
             get.update()
         else:
             system("apt-ftparchive packages %s > %s" % (self.archives,
@@ -289,17 +305,20 @@ class Apt:
         home = os.environ.get("CHANKO_HOME",
                               join(os.environ.get("HOME"), ".chanko"))
         path = join(home, "caches", file(container.config.hash).read())
+        gcache = join(home, "caches", "global")
 
         paths = CachePaths(path)
         state = State(join(home, "state"))
         options = CacheOptions(container, paths, state.paths)
         
         if (not isdir(str(paths.local)) or 
-            not isdir(str(paths.remote))):
+            not isdir(str(paths.remote)) or
+            not isdir(gcache)):
                 
             if create:
                 mkdir_parents(join(paths.local.lists, "partial"))
                 mkdir_parents(join(paths.remote.lists,"partial"))
+                mkdir_parents(gcache)
             else:
                 fatal("no cache found at" + path)
         
@@ -308,14 +327,17 @@ class Apt:
         
         self.remote_cache = Cache(paths.remote,
                                   options.remote,
-                                  container.archives)
+                                  container.archives,
+                                  gcache)
                                   
         self.local_cache  = Cache(paths.local,
                                   options.local,
-                                  container.archives)
+                                  container.archives,
+                                  gcache)
                                   
         self.get = Get(paths.remote,
                        options.remote,
-                       container.archives)
+                       container.archives,
+                       gcache)
 
 

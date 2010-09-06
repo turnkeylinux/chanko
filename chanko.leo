@@ -31,9 +31,9 @@
 <v t="loni.20100904214912" a="E"><vh>sumo integration</vh>
 <v t="loni.20100904214912.1"><vh>use case</vh></v>
 <v t="loni.20100904215050"><vh>file/data structure</vh></v>
-<v t="loni.20100906132825" a="TV"><vh>downloading</vh></v>
+<v t="loni.20100906132825"><vh>downloading</vh></v>
 </v>
-<v t="loni.20100906132825.1"><vh>caching of packages/release</vh></v>
+<v t="loni.20100906132825.1" a="TV"><vh>global packages/releases</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -632,6 +632,48 @@ implementation
 
 
 </t>
-<t tx="loni.20100906132825.1"></t>
+<t tx="loni.20100906132825.1">~/.chanko/
+    caches/
+        65sf36d6sdfs4dfsgdfs/
+            local/
+                sources.list
+                pkgcache.bin
+                lists/
+            remote/
+                pkgcache.bin
+                lists/          &lt;----- packages and releases files are stored here
+    state/
+        dpkg/
+        
+* we dont need to download and store several copies of the same Packages files in 
+  multiple container caches.
+* we can't use hardlinks, because then each container will keep its Packages
+  we need to use softlinks
+
+Q: what about release files? should they also be in the global cache?
+A: it doesn't actually matter - they will have to be downloaded anyway
+    but if they are in global they will take up less space... (not major though...)
+
+        a containers cache will not be updated until it is refreshed (chanko-refresh -r)
+        when it is refreshed, it will download the latest Release,
+        check if the Packages are latest, and get them if need be
+    
+
+~/.chanko/
+    caches/
+        65sf36d6sdfs4dfsgdfs/
+            local/
+            remote/
+                pkgcache.bin
+                lists/
+                    softlink_to_Packages/Releases_in_global
+        global/
+            *Packages.bz2
+            *Packages
+            *Releases
+    state/
+        dpkg/
+
+</t>
 </tnodes>
 </leo_file>
