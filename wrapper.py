@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # Copyright (c) 2010 TurnKey Linux - all rights reserved
-"""Python project skeleton
+"""
+Configuration environment variables:
+    CHANKO_HOME    Location of caches storage (default: $HOME/.chanko)
+    CHANKO_BASE    Location of sumo arena (defaults to cwd)
 """
 
 import re
