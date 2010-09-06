@@ -17,8 +17,9 @@ class Uri:
         self.path = None
         self.md5 = None
         self.size = 0
-
-    def _sumocmd(self, opts):
+    
+    @staticmethod
+    def _sumocmd(opts):
         # CHANKO_BASE _should be_ equivalent to SUMO_BASE
         # currently we have to chdir into SUMO_BASE, setting env doesn't work
         cwd = os.getcwd()
@@ -62,7 +63,7 @@ class Uri:
 
         if not self.md5 == md5sum(self.path):
             fatal("md5sum verification failed: %s" % self.path)
-        
+
     def archive(self, archive_path):
         dest = join(archive_path, self.filename)
         self._sumocmd("cp -l %s %s" % (self.path, dest))
@@ -82,8 +83,9 @@ class Get:
     def _cmdget(self, opts):
         return getoutput("apt-get %s --print-uris %s" % (self.options, opts))
     
-    def _parse_update_uris(self, raw):
-        self.uris = []
+    @staticmethod
+    def _parse_update_uris(raw):
+        uris = []
         for uri in raw.split("\n"):
             m = re.match("\'(.*)\' (.*) 0", uri)
             if m:
@@ -91,10 +93,12 @@ class Get:
                     uri = Uri(m.group(1))
                     uri.destfile = m.group(2)
 
-                    self.uris.append(uri)
+                    uris.append(uri)
+        return uris
 
-    def _parse_install_uris(self, raw):
-        self.uris = []
+    @staticmethod
+    def _parse_install_uris(raw):
+        uris = []
         for line in raw.split("\n"):
             if re.match("Need to get 0B(.*)", line):
                 abort("Newest version already in container")
@@ -105,13 +109,14 @@ class Get:
                 uri.size = int(m.group(3))
                 uri.md5 = m.group(4)
                 
-                self.uris.append(uri)
+                uris.append(uri)
+        return uris
     
     def update(self):
         raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
-        for uri in self.uris:
+        for uri in uris:
             if uri.filename == "Release.gpg":
                 release_uri = Uri(re.sub(".gpg", "", uri.url))
                 release_uri.set_destfile(re.sub(".gpg", "", uri.destfile))
@@ -122,7 +127,7 @@ class Get:
                 #uri.get...
                 #uri.gpg_verify...
 
-        for uri in self.uris:
+        for uri in uris:
             if uri.filename == "Packages.bz2":
                 updated = True
 
@@ -149,9 +154,9 @@ class Get:
 
     def install(self, packages, dir, tree, force):
         raw = self._cmdget("-y install %s" % list2str(packages))
-        self._parse_install_uris(raw)
+        uris = self._parse_install_uris(raw)
         
-        if len(self.uris) == 0:
+        if len(uris) == 0:
             print "Package `%s' not found" % packages[0]
             print "Querying index..."
             c = Cache(self.paths, self.options, self.archives)
@@ -160,11 +165,11 @@ class Get:
 
         size = 0
         print "Packages to get:"
-        for uri in self.uris:
+        for uri in uris:
             print "  " + uri.filename
             size += uri.size
         
-        print "Amount of packages: %i" % len(self.uris)
+        print "Amount of packages: %i" % len(uris)
         print "Need to get %s of archives" % pretty_size(size)
 
         if not force:
@@ -172,7 +177,7 @@ class Get:
             if not raw_input() in ['Y', 'y']:
                 abort("aborted by user")
         
-        for uri in self.uris:
+        for uri in uris:
             uri.get(dir, tree)
             uri.md5_verify()
             uri.archive(self.archives)
@@ -184,13 +189,6 @@ class StatePaths(Paths):
         self.dpkg = Paths(self.dpkg, ['status'])
 
 class State:
-    def init_create(self, path):
-        paths = StatePaths(path)
-        
-        mkdir_parents(paths.apt)
-        mkdir_parents(paths.dpkg)
-        file(paths.dpkg.status, "w").write("")
-    
     def __init__(self, path):
         self.paths = StatePaths(path)
         
@@ -198,6 +196,9 @@ class State:
             not isdir(str(self.paths.dpkg))):
             
             self.init_create(path)
+            mkdir_parents(self.paths.apt)
+            mkdir_parents(self.paths.dpkg)
+            file(paths.dpkg.status, "w").write("")
 
 class CacheOptions:
     def __init__(self, container, cache, state):
@@ -221,8 +222,9 @@ class CacheOptions:
         generic_opts = self._generate_opts(generic)
         self.remote = generic_opts + self._generate_opts(remote)
         self.local  = generic_opts + self._generate_opts(local)
-   
-    def _generate_opts(self, dict):
+
+    @staticmethod
+    def _generate_opts(dict):
         opts = ""
         for opt in dict.keys():
             opts = opts + "-o %s=%s " % (opt, dict[opt])
@@ -252,9 +254,6 @@ class Cache:
     def _cmdcache(self, opts):
         system("apt-cache %s %s" % (self.options, opts))
     
-    def generate(self):
-        self._cmdcache("gencaches")
-
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
             get = Get(self.paths, self.options, self.archives, self.gcache)
@@ -262,11 +261,14 @@ class Cache:
         else:
             system("apt-ftparchive packages %s > %s" % (self.archives,
                                                         self.local_pkgcache))
-        self.generate()
+        self._cmdcache("gencaches")
 
     def query(self, package, info, names, stats):
         if re.match("(.*)local/lists(.*)", self.options):
-            if not exists(self.local_pkgcache) or not getsize(self.local_pkgcache) > 0:
+            
+            if (not exists(self.local_pkgcache) or
+                not getsize(self.local_pkgcache) > 0):
+                   
                 abort("container empty")
                 
         if not package and not info and not names:

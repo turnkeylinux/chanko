@@ -32,13 +32,14 @@ class ContainerPaths(Paths):
         os.environ['CHANKO_BASE'] = path
         
         self.base = join(path, ".container/")
-        self.arena_base = self._get_arena_base()
+        self.arena_base = self._get_arena_base(self.base)
 
         Paths.__init__(self, self.base, ['config', 'archives'])
         self.config = Paths(self.config, ['sources.list', 'hash', 'arch'])
-
-    def _get_arena_base(self):
-        dir = realpath(self.base)
+    
+    @staticmethod
+    def _get_arena_base(base):
+        dir = realpath(base)
         while True:
             dir, subdir = split(dir)
             if basename(dir) == "arena.union":
