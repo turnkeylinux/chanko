@@ -7,13 +7,13 @@ If a specific package version is requested, get that
 If a specific version is not requested, retrieve the newest version
 
 Options:
-  --dir=         Directory in which to store the package, default is CHANKO_BASE
-  --tree         Output dir in package tree format (like automatic repository)
+  --dir=         Relative directory path to CHANKO_BASE for package storage
+                 Default is CHANKO_BASE
+  --tree         Package storage in tree format (resembles automatic repository)
                      $dir/c/chanko/chanko-<version>.<arch>.deb
                  instead of
                      $dir/chanko-<version>.<arch>.deb
   --force        Dont ask for confirmation before downloading
-
 
 """
 

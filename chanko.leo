@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.486246672582">
+<globals body_outline_ratio="0.308784383319">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -30,8 +30,10 @@
 <v t="loni.20100903152430"><vh>query</vh></v>
 <v t="loni.20100904214912" a="E"><vh>sumo integration</vh>
 <v t="loni.20100904214912.1"><vh>use case</vh></v>
-<v t="loni.20100904215050" a="TV"><vh>file/data structure</vh></v>
+<v t="loni.20100904215050"><vh>file/data structure</vh></v>
+<v t="loni.20100906132825" a="TV"><vh>downloading</vh></v>
 </v>
+<v t="loni.20100906132825.1"><vh>caching of packages/release</vh></v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </v>
@@ -473,6 +475,7 @@ apt-cache $L_OPTIONS $@
 </t>
 <t tx="loni.20100902123045.15">* clean up and refactor code
 
+* update design with latest information
 </t>
 <t tx="loni.20100902180534">flow:
     * get list of index files to download from sources.list
@@ -535,8 +538,7 @@ queries:
     print info on specific package
         chanko-query (-r|-l) --info package
         apt-cache show package</t>
-<t tx="loni.20100904214912">
-</t>
+<t tx="loni.20100904214912"></t>
 <t tx="loni.20100904214912.1">
 * alon sets up a sumo arena with chanko, and gets files A, B, C
 * alon then registers the arena with covin
@@ -610,5 +612,16 @@ implementation
     
     
     </t>
+<t tx="loni.20100906132825">* downloading debs should be done via sumo-get, and sumo-cp -l used for hardlinking
+    Q: should sumo be a dependency?
+    Q: should we be able to use chanko when not in an arena?
+        * we have the --dir option, what happens if the user specifies a directory under CHANKO_BASE
+          idea: lets not let him: dont allow ^/(.*)
+                append the dir passed to CHANKO_BASE
+    
+* downloading Packages and Release files should be done directly with curl
+
+</t>
+<t tx="loni.20100906132825.1"></t>
 </tnodes>
 </leo_file>

@@ -81,10 +81,12 @@ class Container:
         if local:
             self.apt.local_cache.query(package, info, names, stats)
 
-    def get(self, packages, dir=None, tree=False, force=False):
-        if not dir:
-            dir = self.paths.chanko_base
-
+    def get(self, packages, dir="", tree=False, force=False):
+        if re.match("^/(.*)", dir):
+            fatal("absolute paths are not allowed: " + dir)
+            
+        dir = join(self.paths.chanko_base, dir)
+        
         self.apt.get.install(packages, dir, tree, force)
         self.apt.local_cache.refresh()
 
