@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.27240461402">
+<globals body_outline_ratio="0.332741792369">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -11,10 +11,10 @@
 <vnodes>
 <v t="loni.20100902123045" a="E"><vh>Project</vh>
 <v t="loni.20100906222353" a="E"><vh>documentation</vh>
-<v t="loni.20100906222353.1" a="TV"><vh>initial release</vh></v>
+<v t="loni.20100906222353.1"><vh>initial release</vh></v>
 </v>
-<v t="loni.20100902123045.6" a="E"><vh>implementation</vh>
-<v t="loni.20100906214807" a="E"><vh>v0.5 - initial release</vh>
+<v t="loni.20100902123045.6" a="E"><vh>development log</vh>
+<v t="loni.20100906214807" a="TV"><vh>v0.5 - initial release</vh>
 <v t="loni.20100902123045.7"><vh>exploration</vh>
 <v t="loni.20100902123045.8"><vh>conf</vh></v>
 <v t="loni.20100902123045.9"><vh>init</vh></v>
@@ -430,11 +430,14 @@ apt-cache $L_OPTIONS $@
 
 </t>
 <t tx="loni.20100902123045.15">
-* write release notes for v0.5
-
-* arch
+* container options
+    * arch  i386 | amd64 | powerpc | sparc
+    * tree  BOOL
+    
+    cli options override container options
 
 * verify Release files (gpg)
+* research binany cache option in apt-ftparchive
 
 
 FUTURE 
@@ -443,8 +446,12 @@ upgrade
     get newest versions of packages in container
 
 get options
-    --source         # get source tarball (and diff)
+    --source         # get source tarball (and patch with diff)
     --build-dep      # get source package build-dependencies
+
+query options
+    --depends
+    --rdepends
 
 add
     add manually downloaded deb so chanko knows about them
@@ -454,6 +461,7 @@ remove
 
 purge
     remove packages that are no longer needed which were pulled in to satisfy dependencies
+
 
 
 
