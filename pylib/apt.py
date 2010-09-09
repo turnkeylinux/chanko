@@ -49,6 +49,7 @@ class Uri:
             self.set_path(dir, tree)
 
         print "* get: " + basename(self.path)
+        mkdir_parents(dirname(self.path))
         if re.match("(.*).deb", self.path):
             self._sumocmd("get %s %s" % (self.url, self.path))
         else:
