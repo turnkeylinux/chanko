@@ -196,10 +196,9 @@ class State:
         if (not isdir(str(self.paths.apt)) or 
             not isdir(str(self.paths.dpkg))):
             
-            self.init_create(path)
             mkdir_parents(self.paths.apt)
             mkdir_parents(self.paths.dpkg)
-            file(paths.dpkg.status, "w").write("")
+            file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
     def __init__(self, container, cache, state):
@@ -317,13 +316,10 @@ class Apt:
         if (not isdir(str(paths.local)) or 
             not isdir(str(paths.remote)) or
             not isdir(gcache)):
-                
-            if create:
-                mkdir_parents(join(paths.local.lists, "partial"))
-                mkdir_parents(join(paths.remote.lists,"partial"))
-                mkdir_parents(gcache)
-            else:
-                fatal("no cache found at" + path)
+            
+            mkdir_parents(join(paths.local.lists, "partial"))
+            mkdir_parents(join(paths.remote.lists,"partial"))
+            mkdir_parents(gcache)
         
         sourceslist = "deb file:/// local debs"
         file(paths.local.sources_list, "w").write(sourceslist)
