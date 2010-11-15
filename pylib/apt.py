@@ -49,7 +49,7 @@ class Uri:
             self.set_path(dir, tree)
 
         print "* get: " + basename(self.path)
-        mkdir_parents(dirname(self.path))
+        os.makedirs(dirname(self.path))
         if re.match("(.*).deb", self.path):
             self._sumocmd("get %s %s" % (self.url, self.path))
         else:
@@ -154,7 +154,7 @@ class Get:
                                               join(self.gcache, unpacked)))
 
     def install(self, packages, dir, tree, force):
-        raw = self._cmdget("-y install %s" % list2str(packages))
+        raw = self._cmdget("-y install %s" % " ".join(packages))
         uris = self._parse_install_uris(raw)
         
         if len(uris) == 0:
@@ -196,8 +196,8 @@ class State:
         if (not isdir(str(self.paths.apt)) or 
             not isdir(str(self.paths.dpkg))):
             
-            mkdir_parents(self.paths.apt)
-            mkdir_parents(self.paths.dpkg)
+            os.makedirs(self.paths.apt)
+            os.makedirs(self.paths.dpkg)
             file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
@@ -317,9 +317,9 @@ class Apt:
             not isdir(str(paths.remote)) or
             not isdir(gcache)):
             
-            mkdir_parents(join(paths.local.lists, "partial"))
-            mkdir_parents(join(paths.remote.lists,"partial"))
-            mkdir_parents(gcache)
+            os.makedirs(join(paths.local.lists, "partial"))
+            os.makedirs(join(paths.remote.lists,"partial"))
+            os.makedirs(gcache)
         
         sourceslist = "deb file:/// local debs"
         file(paths.local.sources_list, "w").write(sourceslist)

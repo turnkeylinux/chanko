@@ -60,8 +60,8 @@ class Container:
         if exists(self.paths.base):
             fatal("container already exists: " + self.paths.base)
 
-        mkdir_parents(self.paths.config)
-        mkdir_parents(join(self.paths.archives, "partial"))
+        os.makedirs(self.paths.config)
+        os.makedirs(join(self.paths.archives, "partial"))
 
         shutil.copyfile(sourceslist, self.paths.config.sources_list)
         
