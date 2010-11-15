@@ -49,7 +49,7 @@ class Uri:
             self.set_path(dir, tree)
 
         print "* get: " + basename(self.path)
-        os.makedirs(dirname(self.path))
+        makedirs(dirname(self.path))
         if re.match("(.*).deb", self.path):
             self._sumocmd("get %s %s" % (self.url, self.path))
         else:
@@ -196,8 +196,8 @@ class State:
         if (not isdir(str(self.paths.apt)) or 
             not isdir(str(self.paths.dpkg))):
             
-            os.makedirs(self.paths.apt)
-            os.makedirs(self.paths.dpkg)
+            makedirs(self.paths.apt)
+            makedirs(self.paths.dpkg)
             file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
@@ -317,9 +317,9 @@ class Apt:
             not isdir(str(paths.remote)) or
             not isdir(gcache)):
             
-            os.makedirs(join(paths.local.lists, "partial"))
-            os.makedirs(join(paths.remote.lists,"partial"))
-            os.makedirs(gcache)
+            makedirs(join(paths.local.lists, "partial"))
+            makedirs(join(paths.remote.lists,"partial"))
+            makedirs(gcache)
         
         sourceslist = "deb file:/// local debs"
         file(paths.local.sources_list, "w").write(sourceslist)

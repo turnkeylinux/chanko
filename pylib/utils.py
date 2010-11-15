@@ -30,6 +30,11 @@ def system(command, *args):
         raise Error("command failed: " + command,
                     os.WEXITSTATUS(err))
 
+def makedirs(path):
+    path = str(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def getoutput(command):
     (s,o) = commands.getstatusoutput(command)
     return o
