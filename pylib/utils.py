@@ -6,6 +6,8 @@ import sys
 import commands
 import getpass
 
+from md5 import md5
+
 class Error(Exception):
     pass
 
@@ -62,7 +64,7 @@ def pretty_size(size):
     if size < 1000000:
         return "~%iKB" % (size/1024)
     else:
-	return "~%iMB" % (size/(1024*1024))
+        return "~%iMB" % (size/(1024*1024))
 
 def treepath(file):
     name = file.split("_")[0]
@@ -74,4 +76,5 @@ def treepath(file):
     return prefix + "/" + name
 
 def md5sum(path):
-    return getoutput("md5sum %s | awk '{print $1}'" % path)
+    return md5(file(path, 'rb').read()).hexdigest()
+
