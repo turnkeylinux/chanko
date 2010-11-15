@@ -159,8 +159,8 @@ class Get:
         
         if len(uris) == 0:
             print "Package `%s' not found" % packages[0]
-            print "Querying index..."
-            c = Cache(self.paths, self.options, self.archives)
+            print "Querying index for similar package..."
+            c = Cache(self.paths, self.options, self.archives, self.gcache)
             c.query(packages[0], info=False, names=True, stats=False)
             abort()
 
