@@ -13,11 +13,6 @@ class Error(Exception):
 def warn(s):
     print >> sys.stderr, "warning: " + str(s)
 
-def fatal(s):
-    print >> sys.stderr
-    print >> sys.stderr, "FATAL: " + str(s)
-    sys.exit(1)
-
 def system(command, *args):
     command = command + " " + " ".join([commands.mkarg(arg) for arg in args])
     err = os.system(command)

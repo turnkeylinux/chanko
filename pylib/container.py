@@ -46,7 +46,7 @@ class ContainerPaths(Paths):
                 return dir
             
             if dir == '/':
-                fatal("not inside a sumo arena")
+                raise Error("not inside a sumo arena")
 
 class Container:
     """ class for creating and controlling a chanko container """
@@ -55,10 +55,10 @@ class Container:
         """ create the container on the filesystem """
         
         if not exists(sourceslist):
-            fatal("no such sources.list '%s'" % sourceslist)
+            raise Error("no such sources.list '%s'" % sourceslist)
 
         if exists(self.paths.base):
-            fatal("container already exists: " + self.paths.base)
+            raise Error("container already exists: " + self.paths.base)
 
         makedirs(self.paths.config)
         makedirs(join(self.paths.archives, "partial"))
@@ -76,7 +76,7 @@ class Container:
     def __init__(self, create=False):
         self.paths = ContainerPaths()
         if not isdir(self.paths.base) and not create:
-            fatal("chanko container does not exist: " + self.paths.base)
+            raise Error("chanko container does not exist: " + self.paths.base)
         
         if not create:
             self.apt = Apt(self.paths)
@@ -97,7 +97,7 @@ class Container:
 
     def get(self, packages, dir="", tree=False, force=False):
         if re.match("^/(.*)", dir):
-            fatal("absolute paths are not allowed: " + dir)
+            raise("absolute paths are not allowed: " + dir)
             
         dir = join(self.paths.chanko_base, dir)
 

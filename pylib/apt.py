@@ -58,13 +58,13 @@ class Uri:
 
     def md5_verify(self):
         if not self.path:
-            fatal("no path set for: " + self.filename)
+            raise Error("no path set for: " + self.filename)
         
         if not self.md5:
-            fatal("no md5 set for: " + self.path)
+            raise Error("no md5 set for: " + self.path)
 
         if not self.md5 == md5sum(self.path):
-            fatal("md5sum verification failed: %s" % self.path)
+            raise Error("md5sum verification failed: %s" % self.path)
 
     def archive(self, archive_path):
         dest = join(archive_path, self.filename)
