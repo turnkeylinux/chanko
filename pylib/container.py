@@ -7,7 +7,6 @@ import random
 import commands
 from os.path import *
 
-from utils import *
 from paths import Paths
 from apt import Apt
 
@@ -20,7 +19,15 @@ def realpath(path):
 
 def randomkey():
     return str(random.randint(100000000000, 999999999999))
-    
+
+def makedirs(path):
+    path = str(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+class Error(Exception):
+    pass
+
 class ContainerPaths(Paths):
     def __init__(self, path=None):
         if path is None:

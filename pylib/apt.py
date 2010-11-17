@@ -5,9 +5,42 @@ import re
 import errno
 import commands
 from os.path import *
+from md5 import md5
 
-from utils import *
 from paths import Paths
+
+def md5sum(path):
+    return md5(file(path, 'rb').read()).hexdigest()
+
+def treepath(file):
+    name = file.split("_")[0]
+    m = re.match("^lib(.*)", name)
+    if m:
+        prefix = "lib" + m.group(1)[0]
+    else:
+        prefix = name[0]
+    return prefix + "/" + name
+
+def pretty_size(size):
+    if size < 1000000:
+        return "~%iKB" % (size/1024)
+    else:
+        return "~%iMB" % (size/(1024*1024))
+
+def makedirs(path):
+    path = str(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def system(command, *args):
+    command = command + " " + " ".join([commands.mkarg(arg) for arg in args])
+    err = os.system(command)
+    if err:
+        raise Error("command failed: " + command,
+                    os.WEXITSTATUS(err))
+
+class Error(Exception):
+    pass
 
 class Uri:
     def __init__(self, url):
@@ -16,7 +49,7 @@ class Uri:
         self.destfile = None
         self.tree = treepath(self.filename)
         self.path = None
-        self.md5 = None
+        self.md5sum = None
         self.size = 0
     
     @staticmethod
@@ -60,10 +93,10 @@ class Uri:
         if not self.path:
             raise Error("no path set for: " + self.filename)
         
-        if not self.md5:
-            raise Error("no md5 set for: " + self.path)
+        if not self.md5sum:
+            raise Error("no md5sum set for: " + self.path)
 
-        if not self.md5 == md5sum(self.path):
+        if not self.md5sum == md5sum(self.path):
             raise Error("md5sum verification failed: %s" % self.path)
 
     def archive(self, archive_path):
@@ -110,7 +143,7 @@ class Get:
             if m:
                 uri = Uri(m.group(1))
                 uri.size = int(m.group(3))
-                uri.md5 = m.group(4)
+                uri.md5sum = m.group(4)
                 
                 uris.append(uri)
         return uris
@@ -144,9 +177,8 @@ class Get:
                 m = re.match("(.*)_(.*)_(.*)_Packages.bz2", uri.destfile)
                 if m and isfile(uri.path):
                     release = join(self.paths.lists, m.group(1)) + "_Release"
-                    md5 = md5sum(uri.path)
                     for line in file(release).readlines():
-                        if re.search(md5, line):
+                        if re.search(md5sum(uri.path), line):
                             updated = False
                             break
 
