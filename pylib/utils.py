@@ -18,11 +18,6 @@ def fatal(s):
     print >> sys.stderr, "FATAL: " + str(s)
     sys.exit(1)
 
-def abort(s=None):
-    if s:
-        print >> sys.stderr, str(s)
-    sys.exit(2)
-
 def system(command, *args):
     command = command + " " + " ".join([commands.mkarg(arg) for arg in args])
     err = os.system(command)
@@ -34,14 +29,6 @@ def makedirs(path):
     path = str(path)
     if not os.path.exists(path):
         os.makedirs(path)
-
-def getoutput(command):
-    (s,o) = commands.getstatusoutput(command)
-    return o
-
-def getstatus(command):
-    (s,o) = commands.getstatusoutput(command)
-    return s
 
 def pretty_size(size):
     if size < 1000000:

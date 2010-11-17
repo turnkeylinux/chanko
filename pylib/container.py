@@ -100,8 +100,8 @@ class Container:
             fatal("absolute paths are not allowed: " + dir)
             
         dir = join(self.paths.chanko_base, dir)
-        
-        self.apt.get.install(packages, dir, tree, force)
-        self.apt.local_cache.refresh()
 
-        
+        if self.apt.get.install(packages, dir, tree, force):
+            self.apt.local_cache.refresh()
+
+

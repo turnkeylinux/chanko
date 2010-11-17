@@ -3,6 +3,7 @@
 import os
 import re
 import errno
+import commands
 from os.path import *
 
 from utils import *
@@ -82,7 +83,8 @@ class Get:
         self.gcache = gcache
 
     def _cmdget(self, opts):
-        return getoutput("apt-get %s --print-uris %s" % (self.options, opts))
+        cmd = "apt-get %s --print-uris %s" % (self.options, opts)
+        return commands.getstatusoutput(cmd)
     
     @staticmethod
     def _parse_update_uris(raw):
@@ -102,7 +104,7 @@ class Get:
         uris = []
         for line in raw.split("\n"):
             if re.match("Need to get 0B(.*)", line):
-                abort("Newest version already in container")
+                raise Error("Newest version already in container")
             
             m = re.match("\'(.*)\' (.*) (.*) (.*)", line)
             if m:
@@ -114,7 +116,7 @@ class Get:
         return uris
     
     def update(self):
-        raw = self._cmdget("update")
+        err, raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
         for uri in uris:
@@ -154,15 +156,19 @@ class Get:
                                               join(self.gcache, unpacked)))
 
     def install(self, packages, dir, tree, force):
-        raw = self._cmdget("-y install %s" % " ".join(packages))
+        err, raw = self._cmdget("-y install %s" % " ".join(packages))
         uris = self._parse_install_uris(raw)
         
         if len(uris) == 0:
-            print "Package `%s' not found" % packages[0]
-            print "Querying index for similar package..."
-            c = Cache(self.paths, self.options, self.archives, self.gcache)
-            c.query(packages[0], info=False, names=True, stats=False)
-            abort()
+            if re.search("Couldn\'t find package", raw):
+                print "Couldn't find package `%s'" % packages[0]
+                print "Querying index for similar package..."
+                c = Cache(self.paths, self.options, self.archives, self.gcache)
+                c.query(packages[0], info=False, names=True, stats=False)
+            else:
+                raise Error ("cmdget returned error: ", err, raw)
+
+            return False
 
         size = 0
         print "Packages to get:"
@@ -176,12 +182,14 @@ class Get:
         if not force:
             print "Do you want to continue [y/N]?",
             if not raw_input() in ['Y', 'y']:
-                abort("aborted by user")
+                raise Error("aborted by user")
         
         for uri in uris:
             uri.get(dir, tree)
             uri.md5_verify()
             uri.archive(self.archives)
+        
+        return True
 
 class StatePaths(Paths):
     def __init__(self, path):
@@ -269,7 +277,7 @@ class Cache:
             if (not exists(self.local_pkgcache) or
                 not getsize(self.local_pkgcache) > 0):
                    
-                abort("container empty")
+                raise Error("container empty")
                 
         if not package and not info and not names:
             # list all packages with short description
