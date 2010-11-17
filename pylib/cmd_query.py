@@ -31,9 +31,9 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "rl",
-                                       ['remote', 'local',
-                                        'info', 'names', 'stats'])
+        opts, args = getopt.getopt(sys.argv[1:], "rl",
+                                   ['remote', 'local', 
+                                    'info', 'names', 'stats'])
 
     except getopt.GetoptError, e:
         usage(e)

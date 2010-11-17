@@ -32,8 +32,8 @@ def warn(s):
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "",
-                                       ['dir=', 'tree', 'force'])
+        opts, args = getopt.getopt(sys.argv[1:], "",
+                                   ['dir=', 'tree', 'force'])
 
     except getopt.GetoptError, e:
         usage(e)
