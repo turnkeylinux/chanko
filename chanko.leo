@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.332741792369">
+<globals body_outline_ratio="0.281277728483">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -46,8 +46,9 @@
 <v t="loni.20100906132825.1"><vh>global packages/releases</vh></v>
 </v>
 </v>
-<v t="loni.20100902123045.15"><vh>TODO</vh></v>
+<v t="loni.20101114184825"><vh>unreleased</vh></v>
 </v>
+<v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
 </vnodes>
 <tnodes>
@@ -439,6 +440,11 @@ apt-cache $L_OPTIONS $@
 * verify Release files (gpg)
 * research binany cache option in apt-ftparchive
 
+depends issue
+    i want to chanko-get apt-proxy, but it will pull in cron due to logrotate
+    we already have fcron downloaded, but its not installed, so apt will pull in cron
+    because logrotate depends: cron | anacron | fcron
+    
 
 FUTURE 
 
@@ -821,5 +827,6 @@ Enjoy.
 
 
 </t>
+<t tx="loni.20101114184825"></t>
 </tnodes>
 </leo_file>
