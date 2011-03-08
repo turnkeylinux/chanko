@@ -100,10 +100,10 @@ class Container:
             if not exists(join(str(self.apt.remote_cache.paths), 'pkgcache.bin')):
                 self.apt.remote_cache.refresh()
 
-            self.apt.remote_cache.query(package, info, names, stats)
+            return self.apt.remote_cache.query(package, info, names, stats)
         
         if local:
-            self.apt.local_cache.query(package, info, names, stats)
+            return self.apt.local_cache.query(package, info, names, stats)
 
     def get(self, packages, dir="", tree=False, force=False):
         if re.match("^/(.*)", dir):

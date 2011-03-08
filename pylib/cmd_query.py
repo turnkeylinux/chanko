@@ -62,7 +62,9 @@ def main():
         usage("remote/local not specified")
     
     cont = container.Container()
-    cont.query(remote, local, package, **kws)
+    results = cont.query(remote, local, package, **kws)
+    
+    print results
 
     
 if __name__ == "__main__":

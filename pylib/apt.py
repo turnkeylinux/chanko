@@ -288,7 +288,7 @@ class Cache:
                                    "_dists_local_debs_binary-i386_Packages")
 
     def _cmdcache(self, opts):
-        system("apt-cache %s %s" % (self.options, opts))
+        return executil.getoutput("apt-cache %s %s" % (self.options, opts))
     
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
@@ -301,42 +301,43 @@ class Cache:
 
     def query(self, package, info, names, stats):
         if re.match("(.*)local/lists(.*)", self.options):
-            
+
             if (not exists(self.local_pkgcache) or
                 not getsize(self.local_pkgcache) > 0):
-                   
+
                 raise Error("container empty")
-                
+
         if not package and not info and not names:
             # list all packages with short description
-            self._cmdcache("search . | sort")
-            
+            results = self._cmdcache("search . | sort")
+
         elif not package and not info and names:
             # list all packages (without description)
-            self._cmdcache("pkgnames | sort")
-            
+            results = self._cmdcache("pkgnames | sort")
+
         elif not package and info and not names:
             # list full package information on all packages
-            self._cmdcache("dumpavail")
-            
+            results = self._cmdcache("dumpavail")
+
         elif package and not info and not names:
             # list all packages with short desc that match package_glob
-            self._cmdcache("search %s | sort" % package)
+            results = self._cmdcache("search %s | sort" % package)
 
         elif package and not info and names:
             # list all packages (without description) that match a package_glob
-            self._cmdcache("pkgnames %s | sort" % package)
-        
+            results = self._cmdcache("pkgnames %s | sort" % package)
+
         elif package and info and not names:
             # list info on specific package
-            self._cmdcache("show %s" % package)
-        
+            results = self._cmdcache("show %s" % package)
+
         else:
             print "options provided do not match a valid query"
-            
+
         if stats:
-            print
-            self._cmdcache("stats")
+            results += "\n\n" + self._cmdcache("stats")
+
+        return results
 
 class Apt:
     def __init__(self, container, create=False):
