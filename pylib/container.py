@@ -97,6 +97,9 @@ class Container:
             
     def query(self, remote, local, package, info=False, names=False, stats=False):
         if remote:
+            if not exists(join(str(self.apt.remote_cache.paths), 'pkgcache.bin')):
+                self.apt.remote_cache.refresh()
+
             self.apt.remote_cache.query(package, info, names, stats)
         
         if local:
