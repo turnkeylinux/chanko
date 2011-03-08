@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 import random
-import commands
+
 from os.path import *
 
 from paths import Paths

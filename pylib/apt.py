@@ -2,10 +2,11 @@
 
 import os
 import re
-import errno
-import commands
+
 from os.path import *
 from md5 import md5
+
+import executil
 
 from paths import Paths
 
@@ -32,12 +33,7 @@ def makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def system(command, *args):
-    command = command + " " + " ".join([commands.mkarg(arg) for arg in args])
-    err = os.system(command)
-    if err:
-        raise Error("command failed: " + command,
-                    os.WEXITSTATUS(err))
+system = executil.system
 
 class Error(Exception):
     pass
@@ -117,7 +113,7 @@ class Get:
 
     def _cmdget(self, opts):
         cmd = "apt-get %s --print-uris %s" % (self.options, opts)
-        return commands.getstatusoutput(cmd)
+        return executil.getoutput(cmd)
     
     @staticmethod
     def _parse_update_uris(raw):
@@ -149,7 +145,7 @@ class Get:
         return uris
     
     def update(self):
-        err, raw = self._cmdget("update")
+        raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
         for uri in uris:
@@ -188,17 +184,17 @@ class Get:
                                               join(self.gcache, unpacked)))
 
     def install(self, packages, dir, tree, force):
-        err, raw = self._cmdget("-y install %s" % " ".join(packages))
-        uris = self._parse_install_uris(raw)
-        
-        if len(uris) == 0:
+        try:
+            raw = self._cmdget("-y install %s" % " ".join(packages))
+            uris = self._parse_install_uris(raw)
+        except executil.ExecError, e:
             if re.search("Couldn\'t find package", raw):
                 print "Couldn't find package `%s'" % packages[0]
                 print "Querying index for similar package..."
                 c = Cache(self.paths, self.options, self.archives, self.gcache)
                 c.query(packages[0], info=False, names=True, stats=False)
             else:
-                raise Error ("cmdget returned error: ", err, raw)
+                raise Error("cmdget returned error: ", e)
 
             return False
 
