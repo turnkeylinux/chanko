@@ -287,9 +287,15 @@ class Cache:
         self.local_pkgcache = join(self.paths.lists, 
                                    "_dists_local_debs_binary-i386_Packages")
 
-    def _cmdcache(self, opts):
-        return executil.getoutput("apt-cache %s %s" % (self.options, opts))
-    
+    def _cmdcache(self, opts, sort=False):
+        results = executil.getoutput("apt-cache %s %s" % (self.options, opts))
+        if sort:
+            results = results.splitlines()
+            results.sort()
+            results = "\n".join(results)
+
+        return results
+
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
             get = Get(self.paths, self.options, self.archives, self.gcache)
@@ -309,11 +315,11 @@ class Cache:
 
         if not package and not info and not names:
             # list all packages with short description
-            results = self._cmdcache("search . | sort")
+            results = self._cmdcache("search .", sort=True)
 
         elif not package and not info and names:
             # list all packages (without description)
-            results = self._cmdcache("pkgnames | sort")
+            results = self._cmdcache("pkgnames", sort=True)
 
         elif not package and info and not names:
             # list full package information on all packages
@@ -321,11 +327,11 @@ class Cache:
 
         elif package and not info and not names:
             # list all packages with short desc that match package_glob
-            results = self._cmdcache("search %s | sort" % package)
+            results = self._cmdcache("search %s" % package, sort=True)
 
         elif package and not info and names:
             # list all packages (without description) that match a package_glob
-            results = self._cmdcache("pkgnames %s | sort" % package)
+            results = self._cmdcache("pkgnames %s" % package, sort=True)
 
         elif package and info and not names:
             # list info on specific package
