@@ -11,18 +11,16 @@ Options:
 
 """
 
-import re
 import sys
 import getopt
-import container
+from os.path import *
+
 import help
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] package[=version] ..." % sys.argv[0]
-
-def warn(s):
-    print >> sys.stderr, "warning: " + str(s)
 
 def main():
     try:
@@ -39,9 +37,15 @@ def main():
     if len(packages) == 0:
         usage("no packages specified")
 
-    cont = container.Container()
-    cont.get(packages, opt_force)
+    chanko = Chanko()
 
-    
+    pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin')
+    if not exists(pkgcache):
+        chanko.apt.remote_cache.refresh()
+
+    if chanko.apt.get.install(packages, force):
+        chanko.apt.local_cache.refresh()
+
+
 if __name__ == "__main__":
     main()

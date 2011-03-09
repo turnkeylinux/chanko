@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Copyright (c) 2010 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
 """
-Refresh chanko container index files and cache
+Refresh chanko index files and cache
 
 Arguments:
   -r  --remote   Resynchronize remote index files and refresh remote cache
@@ -10,8 +10,9 @@ Arguments:
 
 """
 import sys
-import container
+
 import help
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -21,12 +22,13 @@ def main():
     if len(sys.argv) != 2:
         usage()
 
+    local = False
+    remote = False
+
     if sys.argv[1] in ('-r', '--remote'):
         remote = True
-        local  = False
     
     elif sys.argv[1] in ('-l', '--local'):
-        remote = False
         local  = True
     
     elif sys.argv[1] in ('-a', '--all'):
@@ -35,9 +37,13 @@ def main():
     else:
         usage()
     
-    cont = container.Container()
-    cont.refresh(remote, local)
+    chanko = Chanko()
+    if remote:
+        chanko.apt.remote_cache.refresh()
     
+    if local:
+        chanko.apt.local_cache.refresh()
+
 if __name__ == "__main__":
     main()
 

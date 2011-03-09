@@ -26,7 +26,7 @@ def makedirs(path):
 class Error(Exception):
     pass
 
-class ContainerPaths(Paths):
+class ChankoPaths(Paths):
     def __init__(self, path=None):
         if path is None:
             path = os.getenv('CHANKO_BASE', os.getcwd())
@@ -51,8 +51,8 @@ class ContainerPaths(Paths):
 
         return False
 
-class Container:
-    """ class for creating and controlling a chanko container """
+class Chanko:
+    """ class for creating and controlling a chanko """
 
     @staticmethod
     def _new_cache_id(s):
@@ -64,8 +64,8 @@ class Container:
 
     @classmethod
     def init_create(cls, sourceslist):
-        """ create the container on the filesystem """
-        paths = ContainerPaths()
+        """ create the chanko on the filesystem """
+        paths = ChankoPaths()
         
         if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
@@ -83,38 +83,11 @@ class Container:
         file(paths.config.cache_id, "w").write(cache_id)
         
     def __init__(self):
-        self.paths = ContainerPaths()
+        self.paths = ChankoPaths()
         
         for path in (self.paths.config, self.paths.archives):
             if not exists(str(path)):
                 raise Error("does not exist", path)
 
         self.apt = Apt(self.paths)
-
-    def refresh(self, remote=False, local=False):
-        if remote:
-            self.apt.remote_cache.refresh()
-        
-        if local:
-            self.apt.local_cache.refresh()
-            
-    def query(self, remote, local, package, info=False, names=False, stats=False):
-        if remote:
-            pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin'
-            if not exists(pkgcache):
-                self.apt.remote_cache.refresh()
-
-            return self.apt.remote_cache.query(package, info, names, stats)
-        
-        if local:
-            return self.apt.local_cache.query(package, info, names, stats)
-
-    def get(self, packages, force=False):
-        pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin'
-        if not exists(pkgcache):
-            self.apt.remote_cache.refresh()
-
-        if self.apt.get.install(packages, force):
-            self.apt.local_cache.refresh()
-
 

@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # Copyright (c) 2010 Alon Swartz - all rights reserved
 """
-Query chanko container
+Query chanko
 
 If package_glob is provided, print only those packages whose names match the 
 glob otherwise, by default, print a list of all packages
     
 Arguments:
   -r  --remote   Query remote packages
-  -l  --local    Query local packages stored in the container
+  -l  --local    Query local packages stored in the chanko
 
 Options:
   --info         Print full package information
@@ -19,11 +19,12 @@ Options:
 
 """
 
-import re
 import sys
 import getopt
-import container
+from os.path import *
+
 import help
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -50,22 +51,31 @@ def main():
             local = True
         else:
             kws[opt[2:]] = val
-    
+
     if len(args) == 0:
         package = None
+
     elif len(args) == 1:
         package = args[0]
+
     else:
         usage("bad number of arguments (package_glob)")
 
     if not remote and not local:
         usage("remote/local not specified")
-    
-    cont = container.Container()
-    results = cont.query(remote, local, package, **kws)
-    
+
+    if remote:
+        pkgcache = join(str(chanko.apt.remote_cache.paths), 'pkgcache.bin')
+        if not exists(pkgcache):
+            chanko.apt.remote_cache.refresh()
+
+        results = chanko.apt.remote_cache.query(package, **kws)
+
+    if local:
+        results = chanko.apt.local_cache.query(package, **kws)
+
     print results
 
-    
+
 if __name__ == "__main__":
     main()

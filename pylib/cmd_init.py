@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Copyright (c) 2010 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
 """
-Initialize a new chanko container
+Initialize a new chanko
 
-If sources.list is specified, it will be used and the container will be
-refreshed post initialization.
+If sources.list is specified, it will be used and chanko will be refreshed
+post initialization.
 
 If --dummy is specified, an exemplary sources.list will be created.
 
@@ -12,11 +12,8 @@ If --dummy is specified, an exemplary sources.list will be created.
 import sys
 from os.path import *
 
-import container
 import help
-
-class Error(Exception):
-    pass
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -32,7 +29,7 @@ def get_dummy_sourceslist():
         if exists(path):
             return path
 
-    raise Error('dummy sources.list file not found', paths)
+    usage('dummy sources.list file not found: ' + paths)
 
 def main():
     if len(sys.argv) != 2:
@@ -45,11 +42,10 @@ def main():
         sourceslist = sys.argv[1]
         refresh = True
 
-    container.Container.init_create(sourceslist)
+    Chanko.init_create(sourceslist)
     if refresh:
-        cont = container.Container()
-        cont.refresh(remote=True)
-
+        chanko = Chanko()
+        chanko.apt.remote_cache.refresh()
 
 if __name__ == "__main__":
     main()

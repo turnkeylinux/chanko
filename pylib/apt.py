@@ -116,7 +116,7 @@ class Get:
         uris = []
         for line in raw.split("\n"):
             if re.match("Need to get 0B(.*)", line):
-                raise Error("Newest version already in container")
+                raise Error("Newest version already in chanko")
             
             m = re.match("\'(.*)\' (.*) (.*) (.*)", line)
             if m:
@@ -219,17 +219,17 @@ class State:
             file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
-    def __init__(self, container, cache, state):
-        generic = {'Dir':                  container,
-                   'Dir::Etc':             container.config,
-                   'Dir::Cache::Archives': container.archives,
+    def __init__(self, chanko, cache, state):
+        generic = {'Dir':                  chanko,
+                   'Dir::Etc':             chanko.config,
+                   'Dir::Cache::Archives': chanko.archives,
                    'Dir::State':           state.apt,
                    'Dir::State::status':   state.dpkg.status
                   }
         
         remote =  {'Dir::Cache':           cache.remote,
                    'Dir::State::Lists':    cache.remote.lists,
-                   'Dir::Etc::SourceList': container.config.sources_list
+                   'Dir::Etc::SourceList': chanko.config.sources_list
                   }
 
         local =   {'Dir::Cache':           cache.local,
@@ -293,7 +293,7 @@ class Cache:
             if (not exists(self.local_pkgcache) or
                 not getsize(self.local_pkgcache) > 0):
 
-                raise Error("container empty")
+                raise Error("chanko is empty")
 
         if not package and not info and not names:
             # list all packages with short description
@@ -328,15 +328,15 @@ class Cache:
         return results
 
 class Apt:
-    def __init__(self, container, create=False):
+    def __init__(self, chanko, create=False):
         home = os.environ.get("CHANKO_HOME",
                               join(os.environ.get("HOME"), ".chanko"))
-        path = join(home, "caches", file(container.config.cache_id).read())
+        path = join(home, "caches", file(chanko.config.cache_id).read())
         gcache = join(home, "caches", "global")
 
         paths = CachePaths(path)
         state = State(join(home, "state"))
-        options = CacheOptions(container, paths, state.paths)
+        options = CacheOptions(chanko, paths, state.paths)
         
         if (not isdir(str(paths.local)) or 
             not isdir(str(paths.remote)) or
@@ -351,17 +351,17 @@ class Apt:
         
         self.remote_cache = Cache(paths.remote,
                                   options.remote,
-                                  container.archives,
+                                  chanko.archives,
                                   gcache)
                                   
         self.local_cache  = Cache(paths.local,
                                   options.local,
-                                  container.archives,
+                                  chanko.archives,
                                   gcache)
                                   
         self.get = Get(paths.remote,
                        options.remote,
-                       container.archives,
+                       chanko.archives,
                        gcache)
 
 
