@@ -188,7 +188,7 @@ class Get:
             raw = self._cmdget("-y install %s" % " ".join(packages))
             uris = self._parse_install_uris(raw)
         except executil.ExecError, e:
-            if re.search("Couldn\'t find package", raw):
+            if re.search("Couldn\'t find package", e[2]):
                 print "Couldn't find package `%s'" % packages[0]
                 print "Querying index for similar package..."
                 c = Cache(self.paths, self.options, self.archives, self.gcache)
