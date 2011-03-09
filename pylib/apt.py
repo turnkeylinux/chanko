@@ -13,15 +13,6 @@ from paths import Paths
 def md5sum(path):
     return md5(file(path, 'rb').read()).hexdigest()
 
-def treepath(file):
-    name = file.split("_")[0]
-    m = re.match("^lib(.*)", name)
-    if m:
-        prefix = "lib" + m.group(1)[0]
-    else:
-        prefix = name[0]
-    return prefix + "/" + name
-
 def pretty_size(size):
     if size < 1000000:
         return "~%iKB" % (size/1024)
@@ -43,7 +34,6 @@ class Uri:
         self.url = url
         self.filename = basename(url)
         self.destfile = None
-        self.tree = treepath(self.filename)
         self.path = None
         self.md5sum = None
         self.size = 0
@@ -60,7 +50,7 @@ class Uri:
     def set_destfile(self, destfile):
         self.destfile = destfile
         
-    def set_path(self, dir, tree=False):
+    def set_path(self, dir):
         if not dir:
             raise Error("dir not passed for: " + self.url)
         
@@ -69,14 +59,11 @@ class Uri:
         else:
             filename = self.filename
         
-        if tree:
-            self.path = join(dir, self.tree, filename)
-        else:
-            self.path = join(dir, filename)
+        self.path = join(dir, filename)
 
-    def get(self, dir=None, tree=False):
+    def get(self, dir=None):
         if not self.path:
-            self.set_path(dir, tree)
+            self.set_path(dir)
 
         print "* get: " + basename(self.path)
         makedirs(dirname(self.path))
@@ -183,7 +170,7 @@ class Get:
                     system("bzcat %s > %s" % (uri.path,
                                               join(self.gcache, unpacked)))
 
-    def install(self, packages, dir, tree, force):
+    def install(self, packages, dir, force):
         try:
             raw = self._cmdget("-y install %s" % " ".join(packages))
             uris = self._parse_install_uris(raw)
@@ -213,7 +200,7 @@ class Get:
                 raise Error("aborted by user")
         
         for uri in uris:
-            uri.get(dir, tree)
+            uri.get(dir)
             uri.md5_verify()
             uri.archive(self.archives)
         

@@ -9,10 +9,6 @@ If a specific version is not requested, retrieve the newest version
 Options:
   --dir=         Relative directory path to CHANKO_BASE for package storage
                  Default is CHANKO_BASE
-  --tree         Package storage in tree format (resembles automatic repository)
-                     $dir/c/chanko/chanko-<version>.<arch>.deb
-                 instead of
-                     $dir/chanko-<version>.<arch>.deb
   --force        Dont ask for confirmation before downloading
 
 """
@@ -33,7 +29,7 @@ def warn(s):
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "",
-                                       ['dir=', 'tree', 'force'])
+                                       ['dir=', 'force'])
 
     except getopt.GetoptError, e:
         usage(e)
@@ -42,7 +38,7 @@ def main():
     remote = False
     local = False
     for opt, val in opts:
-        if opt in ('--tree', '--force'):
+        if opt in ('--force'):
             kws[opt[2:]] = True
         else:
             kws[opt[2:]] = val

@@ -2,7 +2,7 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.281277728483">
+<globals body_outline_ratio="0.393078970719">
 	<global_window_position top="0" left="5" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
@@ -14,7 +14,7 @@
 <v t="loni.20100906222353.1"><vh>initial release</vh></v>
 </v>
 <v t="loni.20100902123045.6" a="E"><vh>development log</vh>
-<v t="loni.20100906214807" a="TV"><vh>v0.5 - initial release</vh>
+<v t="loni.20100906214807"><vh>v0.5 - initial release</vh>
 <v t="loni.20100902123045.7"><vh>exploration</vh>
 <v t="loni.20100902123045.8"><vh>conf</vh></v>
 <v t="loni.20100902123045.9"><vh>init</vh></v>
@@ -46,7 +46,9 @@
 <v t="loni.20100906132825.1"><vh>global packages/releases</vh></v>
 </v>
 </v>
-<v t="loni.20101114184825"><vh>unreleased</vh></v>
+<v t="loni.20101114184825" a="E"><vh>unreleased</vh>
+<v t="user.20110309123103" a="TV"><vh>filestructure</vh></v>
+</v>
 </v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
 </v>
@@ -828,5 +830,25 @@ Enjoy.
 
 </t>
 <t tx="loni.20101114184825"></t>
+<t tx="user.20110309123103">remove .container
+don't store packages multople times?
+hash -&gt; cache_id
+
+
+
+Q: do we really need to store the downloaded packages in tree directory structure?
+    i never 'browse' the downloaded packages
+    if we really want them, we can get them from pool into what ever structure we want
+    it should be as simple as possible
+
+rocky.chanko/
+    config/
+        sources.list
+        cache_id
+    packages/
+        ...
+
+
+</t>
 </tnodes>
 </leo_file>
