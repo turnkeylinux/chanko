@@ -85,6 +85,7 @@ class Chanko:
             if not exists(str(path)):
                 raise Error("does not exist", path)
 
+        mkdir(join(self.paths.archives, "partial"))
         cache_id = file(self.paths.config.cache_id).read()
 
         self.remote_cache = Cache('remote', cache_id, self.paths)
