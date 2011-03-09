@@ -82,10 +82,6 @@ class Uri:
         if not self.md5sum == md5sum(self.path):
             raise Error("md5sum verification failed: %s" % self.path)
 
-    def archive(self, archive_path):
-        dest = join(archive_path, self.filename)
-        self._sumocmd("cp -l %s %s" % (self.path, dest))
-        
     def link(self, link_path):
         dest = join(link_path, self.destfile)
         if not islink(dest):
@@ -170,7 +166,7 @@ class Get:
                     system("bzcat %s > %s" % (uri.path,
                                               join(self.gcache, unpacked)))
 
-    def install(self, packages, dir, force):
+    def install(self, packages, force):
         try:
             raw = self._cmdget("-y install %s" % " ".join(packages))
             uris = self._parse_install_uris(raw)
@@ -200,9 +196,8 @@ class Get:
                 raise Error("aborted by user")
         
         for uri in uris:
-            uri.get(dir)
+            uri.get(self.archives)
             uri.md5_verify()
-            uri.archive(self.archives)
         
         return True
 

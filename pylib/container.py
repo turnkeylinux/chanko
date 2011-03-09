@@ -101,13 +101,8 @@ class Container:
         if local:
             return self.apt.local_cache.query(package, info, names, stats)
 
-    def get(self, packages, dir="", force=False):
-        if re.match("^/(.*)", dir):
-            raise("absolute paths are not allowed: " + dir)
-            
-        dir = join(self.paths.base, dir)
-
-        if self.apt.get.install(packages, dir, force):
+    def get(self, packages, force=False):
+        if self.apt.get.install(packages, force):
             self.apt.local_cache.refresh()
 
 

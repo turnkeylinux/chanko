@@ -7,8 +7,6 @@ If a specific package version is requested, get that
 If a specific version is not requested, retrieve the newest version
 
 Options:
-  --dir=         Relative directory path to CHANKO_BASE for package storage
-                 Default is CHANKO_BASE
   --force        Dont ask for confirmation before downloading
 
 """
@@ -28,26 +26,21 @@ def warn(s):
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "",
-                                       ['dir=', 'force'])
-
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "", ['force'])
     except getopt.GetoptError, e:
         usage(e)
 
-    kws={}
-    remote = False
-    local = False
+    opt_force = False
     for opt, val in opts:
-        if opt in ('--force'):
-            kws[opt[2:]] = True
-        else:
-            kws[opt[2:]] = val
-    
-    if len(args) == 0:
+        if opt == '--force':
+            opt_force = True
+
+    packages = args
+    if len(packages) == 0:
         usage("no packages specified")
 
     cont = container.Container()
-    cont.get(args, **kws)
+    cont.get(packages, opt_force)
 
     
 if __name__ == "__main__":
