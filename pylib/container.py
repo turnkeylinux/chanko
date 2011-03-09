@@ -100,7 +100,8 @@ class Container:
             
     def query(self, remote, local, package, info=False, names=False, stats=False):
         if remote:
-            if not exists(join(str(self.apt.remote_cache.paths), 'pkgcache.bin')):
+            pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin'
+            if not exists(pkgcache):
                 self.apt.remote_cache.refresh()
 
             return self.apt.remote_cache.query(package, info, names, stats)
@@ -109,6 +110,10 @@ class Container:
             return self.apt.local_cache.query(package, info, names, stats)
 
     def get(self, packages, force=False):
+        pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin'
+        if not exists(pkgcache):
+            self.apt.remote_cache.refresh()
+
         if self.apt.get.install(packages, force):
             self.apt.local_cache.refresh()
 
