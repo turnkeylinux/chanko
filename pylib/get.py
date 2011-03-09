@@ -10,12 +10,6 @@ from common import mkdir
 def md5sum(path):
     return md5.md5(file(path, 'rb').read()).hexdigest()
 
-def pretty_size(size):
-    if size < 1000000:
-        return "~%iKB" % (size/1024)
-    else:
-        return "~%iMB" % (size/(1024*1024))
-
 class Error(Exception):
     pass
 
@@ -156,6 +150,18 @@ class Get:
                     executil.system("bzcat %s > %s" % 
                                     (uri.path, join(self.gcache, unpacked)))
 
+    @staticmethod
+    def _fmt_bytes(bytes):
+        G = (1024 * 1024 * 1024)
+        M = (1024 * 1024)
+        K = (1024)
+        if bytes > G:
+            return str(bytes/G) + "G"
+        elif bytes > M:
+            return str(bytes/M) + "M"
+        else:
+            return str(bytes/K) + "K"
+
     def install(self, packages, force):
         try:
             raw = self._cmdget("-y install %s" % " ".join(packages))
@@ -178,7 +184,7 @@ class Get:
             size += uri.size
 
         print "Amount of packages: %i" % len(uris)
-        print "Need to get %s of archives" % pretty_size(size)
+        print "Need to get %s of archives" % self._fmt_bytes(size)
 
         if not force:
             print "Do you want to continue [y/N]?",
