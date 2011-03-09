@@ -43,8 +43,8 @@ def main():
     if not exists(pkgcache):
         chanko.remote_cache.refresh()
 
-    if chanko.remote_cache.get(packages, opt_force):
-        chanko.local_cache.refresh()
+    chanko.remote_cache.get(packages, opt_force)
+    chanko.local_cache.refresh()
 
 
 if __name__ == "__main__":
