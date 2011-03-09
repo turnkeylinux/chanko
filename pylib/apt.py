@@ -331,7 +331,7 @@ class Apt:
     def __init__(self, container, create=False):
         home = os.environ.get("CHANKO_HOME",
                               join(os.environ.get("HOME"), ".chanko"))
-        path = join(home, "caches", file(container.config.hash).read())
+        path = join(home, "caches", file(container.config.cache_id).read())
         gcache = join(home, "caches", "global")
 
         paths = CachePaths(path)

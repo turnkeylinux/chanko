@@ -40,7 +40,7 @@ class ContainerPaths(Paths):
         os.environ['CHANKO_BASE'] = path
 
         Paths.__init__(self, self.base, ['config', 'archives'])
-        self.config = Paths(self.config, ['sources.list', 'hash', 'arch'])
+        self.config = Paths(self.config, ['sources.list', 'cache_id', 'arch'])
 
     @staticmethod
     def _is_arena(path):
@@ -73,7 +73,7 @@ class Container:
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
         
-        file(paths.config.hash, "w").write(randomkey())
+        file(paths.config.cache_id, "w").write(randomkey())
         
     def __init__(self):
         self.paths = ContainerPaths()
