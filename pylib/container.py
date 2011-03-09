@@ -33,27 +33,25 @@ class ContainerPaths(Paths):
         if path is None:
             path = os.getenv('CHANKO_BASE', os.getcwd())
 
-        self.chanko_base = path
-        
-        path = realpath(path)
+        self.base = realpath(path)
+        if not self._is_arena(self.base):
+            raise Error("not inside a sumo arena")
+
         os.environ['CHANKO_BASE'] = path
-        
-        self.base = join(path, ".container/")
-        self.arena_base = self._get_arena_base(self.base)
 
         Paths.__init__(self, self.base, ['config', 'archives'])
         self.config = Paths(self.config, ['sources.list', 'hash', 'arch'])
-    
+
     @staticmethod
-    def _get_arena_base(base):
-        dir = realpath(base)
-        while True:
-            dir, subdir = split(dir)
+    def _is_arena(path):
+        dir = realpath(path)
+        while dir is not '/':
             if basename(dir) == "arena.union":
-                return dir
-            
-            if dir == '/':
-                raise Error("not inside a sumo arena")
+                return True
+
+            dir, subdir = split(dir)
+
+        return False
 
 class Container:
     """ class for creating and controlling a chanko container """
@@ -66,8 +64,9 @@ class Container:
         if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
 
-        if exists(paths.base):
-            raise Error("container already exists: " + paths.base)
+        for path in (paths.config, paths.archives):
+            if exists(str(path)):
+                raise Error("already exists", path)
 
         makedirs(paths.config)
         makedirs(join(paths.archives, "partial"))
@@ -78,9 +77,11 @@ class Container:
         
     def __init__(self):
         self.paths = ContainerPaths()
-        if not isdir(self.paths.base):
-            raise Error("chanko container does not exist: " + self.paths.base)
         
+        for path in (self.paths.config, self.paths.archives):
+            if not exists(str(path)):
+                raise Error("does not exist", path)
+
         self.apt = Apt(self.paths)
 
     def refresh(self, remote, local):
@@ -104,7 +105,7 @@ class Container:
         if re.match("^/(.*)", dir):
             raise("absolute paths are not allowed: " + dir)
             
-        dir = join(self.paths.chanko_base, dir)
+        dir = join(self.paths.base, dir)
 
         if self.apt.get.install(packages, dir, tree, force):
             self.apt.local_cache.refresh()
