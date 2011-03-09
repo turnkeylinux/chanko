@@ -1,0 +1,23 @@
+v0.6 Release Notes
+==================
+
+* lots of bugfixes, refactoring and cleaning up of non-pythonic ugly code
+* ported to pyproject 1.0
+* using turnkey-pylib (paths, executil)
+
+* config and archives are now stored in CHANKO_BASE (not in .container)
+* packages are now only stored once (in archives), so --tree and --dir
+  options have been removed from chanko-get
+* hash has been renamed cache_id (thats what it is) and now guaranteed 
+  to be unique
+
+* auto-refresh:
+  * local cache after getting packages
+  * remote cache if no remote cache exists when asked to query remote
+  * remote cache if sources.list has changed
+
+* print query results from cli code
+* using python sort() instead of piping query output through sort
+
+* finding dummy sourceslist according to 'INSTALL_PATH'
+
