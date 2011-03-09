@@ -45,8 +45,11 @@ def main():
         sourceslist = sys.argv[1]
         refresh = True
 
-    cont = container.Container(create=True)
-    cont.init_create(sourceslist, refresh)
-    
+    container.Container.init_create(sourceslist)
+    if refresh:
+        cont = container.Container()
+        cont.refresh(remote=True, local=False)
+
+
 if __name__ == "__main__":
     main()

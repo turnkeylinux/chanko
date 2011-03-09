@@ -58,35 +58,30 @@ class ContainerPaths(Paths):
 class Container:
     """ class for creating and controlling a chanko container """
 
-    def init_create(self, sourceslist, refresh):
+    @classmethod
+    def init_create(cls, sourceslist):
         """ create the container on the filesystem """
+        paths = ContainerPaths()
         
         if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
 
-        if exists(self.paths.base):
-            raise Error("container already exists: " + self.paths.base)
+        if exists(paths.base):
+            raise Error("container already exists: " + paths.base)
 
-        makedirs(self.paths.config)
-        makedirs(join(self.paths.archives, "partial"))
+        makedirs(paths.config)
+        makedirs(join(paths.archives, "partial"))
 
-        shutil.copyfile(sourceslist, self.paths.config.sources_list)
+        shutil.copyfile(sourceslist, paths.config.sources_list)
         
-        file(self.paths.config.hash, "w").write(randomkey())
+        file(paths.config.hash, "w").write(randomkey())
         
-        if refresh:
-            self.apt = Apt(self.paths, create=True)
-            self.refresh(remote=True, local=False)
-        else:
-            print "chanko sources.list: " + self.paths.config.sources_list
-
-    def __init__(self, create=False):
+    def __init__(self):
         self.paths = ContainerPaths()
-        if not isdir(self.paths.base) and not create:
+        if not isdir(self.paths.base):
             raise Error("chanko container does not exist: " + self.paths.base)
         
-        if not create:
-            self.apt = Apt(self.paths)
+        self.apt = Apt(self.paths)
 
     def refresh(self, remote, local):
         if remote:
