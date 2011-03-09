@@ -7,7 +7,7 @@ If a specific package version is requested, get that
 If a specific version is not requested, retrieve the newest version
 
 Options:
-  --force        Dont ask for confirmation before downloading
+  -f --force     Dont ask for confirmation before downloading
 
 """
 
@@ -26,13 +26,13 @@ def warn(s):
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "", ['force'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":f", ['force'])
     except getopt.GetoptError, e:
         usage(e)
 
     opt_force = False
     for opt, val in opts:
-        if opt == '--force':
+        if opt in ('-f', '--force'):
             opt_force = True
 
     packages = args
