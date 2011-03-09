@@ -2,13 +2,13 @@
 
 import os
 import re
-
 from os.path import *
 from md5 import md5
 
 import executil
-
 from paths import Paths
+
+from common import mkdir
 
 def md5sum(path):
     return md5(file(path, 'rb').read()).hexdigest()
@@ -18,11 +18,6 @@ def pretty_size(size):
         return "~%iKB" % (size/1024)
     else:
         return "~%iMB" % (size/(1024*1024))
-
-def makedirs(path):
-    path = str(path)
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 system = executil.system
 
@@ -66,7 +61,7 @@ class Uri:
             self.set_path(dir)
 
         print "* get: " + basename(self.path)
-        makedirs(dirname(self.path))
+        mkdir(dirname(self.path))
         if re.match("(.*).deb", self.path):
             self._sumocmd("get %s %s" % (self.url, self.path))
         else:
@@ -211,8 +206,8 @@ class State:
     def __init__(self, path):
         self.paths = StatePaths(path)
             
-        makedirs(self.paths.apt)
-        makedirs(self.paths.dpkg)
+        mkdir(self.paths.apt)
+        mkdir(self.paths.dpkg)
         file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
@@ -335,9 +330,9 @@ class Apt:
         state = State(join(home, "state"))
         options = CacheOptions(chanko, paths, state.paths)
         
-        makedirs(join(paths.local.lists, "partial"))
-        makedirs(join(paths.remote.lists,"partial"))
-        makedirs(gcache)
+        mkdir(join(paths.local.lists, "partial"))
+        mkdir(join(paths.remote.lists,"partial"))
+        mkdir(gcache)
         
         sourceslist = "deb file:/// local debs"
         file(paths.local.sources_list, "w").write(sourceslist)

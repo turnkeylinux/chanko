@@ -5,10 +5,11 @@ import re
 import md5
 import time
 import shutil
-
 from os.path import *
 
 from paths import Paths
+
+from common import mkdir
 from apt import Apt
 
 def realpath(path):
@@ -17,11 +18,6 @@ def realpath(path):
         return os.path.realpath(path)
 
     return join(os.path.realpath(dirname(path)), basename(path))
-
-def makedirs(path):
-    path = str(path)
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 class Error(Exception):
     pass
@@ -74,8 +70,8 @@ class Chanko:
             if exists(str(path)):
                 raise Error("already exists", path)
 
-        makedirs(paths.config)
-        makedirs(join(paths.archives, "partial"))
+        mkdir(paths.config)
+        mkdir(join(paths.archives, "partial"))
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
         
