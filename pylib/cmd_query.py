@@ -64,15 +64,16 @@ def main():
     if not remote and not local:
         usage("remote/local not specified")
 
+    chanko = Chanko()
     if remote:
-        pkgcache = join(str(chanko.apt.remote_cache.paths), 'pkgcache.bin')
+        pkgcache = join(str(chanko.remote_cache.paths), 'pkgcache.bin')
         if not exists(pkgcache):
-            chanko.apt.remote_cache.refresh()
+            chanko.remote_cache.refresh()
 
-        results = chanko.apt.remote_cache.query(package, **kws)
+        results = chanko.remote_cache.query(package, **kws)
 
     if local:
-        results = chanko.apt.local_cache.query(package, **kws)
+        results = chanko.local_cache.query(package, **kws)
 
     print results
 

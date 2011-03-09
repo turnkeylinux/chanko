@@ -39,10 +39,10 @@ def main():
     
     chanko = Chanko()
     if remote:
-        chanko.apt.remote_cache.refresh()
+        chanko.remote_cache.refresh()
     
     if local:
-        chanko.apt.local_cache.refresh()
+        chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

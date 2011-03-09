@@ -39,12 +39,12 @@ def main():
 
     chanko = Chanko()
 
-    pkgcache = join(str(self.apt.remote_cache.paths), 'pkgcache.bin')
+    pkgcache = join(str(chanko.remote_cache.paths), 'pkgcache.bin')
     if not exists(pkgcache):
-        chanko.apt.remote_cache.refresh()
+        chanko.remote_cache.refresh()
 
-    if chanko.apt.get.install(packages, force):
-        chanko.apt.local_cache.refresh()
+    if chanko.remote_cache.get(packages, opt_force):
+        chanko.local_cache.refresh()
 
 
 if __name__ == "__main__":

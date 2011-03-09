@@ -10,7 +10,7 @@ from os.path import *
 from paths import Paths
 
 from common import mkdir
-from apt import Apt
+from cache import Cache
 
 def realpath(path):
     """prevent realpath from following a symlink for basename component of path"""
@@ -62,7 +62,7 @@ class Chanko:
     def init_create(cls, sourceslist):
         """ create the chanko on the filesystem """
         paths = ChankoPaths()
-        
+
         if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
 
@@ -74,16 +74,19 @@ class Chanko:
         mkdir(join(paths.archives, "partial"))
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
-        
+
         cache_id = cls._new_cache_id(paths.base)
         file(paths.config.cache_id, "w").write(cache_id)
-        
+
     def __init__(self):
         self.paths = ChankoPaths()
-        
+
         for path in (self.paths.config, self.paths.archives):
             if not exists(str(path)):
                 raise Error("does not exist", path)
 
-        self.apt = Apt(self.paths)
+        cache_id = file(self.paths.config.cache_id).read()
+
+        self.remote_cache = Cache('remote', cache_id, self.paths)
+        self.local_cache = Cache('local', cache_id, self.paths)
 

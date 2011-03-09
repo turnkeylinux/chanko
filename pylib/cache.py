@@ -211,17 +211,17 @@ class State:
         file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
-    def __init__(self, chanko, cache, state):
-        generic = {'Dir':                  chanko,
-                   'Dir::Etc':             chanko.config,
-                   'Dir::Cache::Archives': chanko.archives,
+    def __init__(self, chanko_paths, cache, state):
+        generic = {'Dir':                  chanko_paths,
+                   'Dir::Etc':             chanko_paths.config,
+                   'Dir::Cache::Archives': chanko_paths.archives,
                    'Dir::State':           state.apt,
                    'Dir::State::status':   state.dpkg.status
                   }
         
         remote =  {'Dir::Cache':           cache.remote,
                    'Dir::State::Lists':    cache.remote.lists,
-                   'Dir::Etc::SourceList': chanko.config.sources_list
+                   'Dir::Etc::SourceList': chanko_paths.config.sources_list
                   }
 
         local =   {'Dir::Cache':           cache.local,
@@ -250,13 +250,34 @@ class CachePaths(Paths):
 
 class Cache:
     """ class for controlling chanko cache """
-    
-    def __init__(self, paths, options, archives, gcache):
-        self.paths = paths
-        self.options = options
-        self.archives = archives
-        self.gcache = gcache
+
+    def __init__(self, cache_type, cache_id, chanko_paths):
+        homedir = os.environ.get("CHANKO_HOME",
+                                 join(os.environ.get("HOME"), ".chanko"))
+
+        cachepaths = CachePaths(join(homedir, 'caches', cache_id))
+        mkdir(join(cachepaths.local.lists, 'partial'))
+        mkdir(join(cachepaths.remote.lists,'partial'))
+        paths = {'remote': cachepaths.remote,
+                 'local':  cachepaths.local}
+        self.cache_type = cache_type
+        self.paths = paths[self.cache_type]
+
+        self.gcache = join(homedir, 'caches', 'global')
+        mkdir(self.gcache)
+
+        self.archives = chanko_paths.archives
+        state = State(join(homedir, 'state'))
         
+        _options = CacheOptions(chanko_paths, cachepaths, state.paths)
+        options = {'remote': _options.remote,
+                   'local':  _options.local}
+
+        self.options = options[self.cache_type]
+
+        sourceslist = "deb file:/// local debs"
+        file(cachepaths.local.sources_list, "w").write(sourceslist)
+
         # reminder: arch
         self.local_pkgcache = join(self.paths.lists, 
                                    "_dists_local_debs_binary-i386_Packages")
@@ -270,8 +291,15 @@ class Cache:
 
         return results
 
+    def get(self, packages, force=False):
+        if self.cache_type is not 'remote':
+            raise Error('can only get packages if cache is remote')
+
+        get = Get(self.paths, self.options, self.archives, self.gcache)
+        get.install(packages, force)
+
     def refresh(self):
-        if re.match("(.*)remote/lists(.*)", self.options):
+        if self.cache_type is 'remote':
             get = Get(self.paths, self.options, self.archives, self.gcache)
             get.update()
         else:
@@ -279,7 +307,7 @@ class Cache:
                                                         self.local_pkgcache))
         self._cmdcache("gencaches")
 
-    def query(self, package, info, names, stats):
+    def query(self, package, info=False, names=False, stats=False):
         if re.match("(.*)local/lists(.*)", self.options):
 
             if (not exists(self.local_pkgcache) or
@@ -318,38 +346,4 @@ class Cache:
             results += "\n\n" + self._cmdcache("stats")
 
         return results
-
-class Apt:
-    def __init__(self, chanko, create=False):
-        home = os.environ.get("CHANKO_HOME",
-                              join(os.environ.get("HOME"), ".chanko"))
-        path = join(home, "caches", file(chanko.config.cache_id).read())
-        gcache = join(home, "caches", "global")
-
-        paths = CachePaths(path)
-        state = State(join(home, "state"))
-        options = CacheOptions(chanko, paths, state.paths)
-        
-        mkdir(join(paths.local.lists, "partial"))
-        mkdir(join(paths.remote.lists,"partial"))
-        mkdir(gcache)
-        
-        sourceslist = "deb file:/// local debs"
-        file(paths.local.sources_list, "w").write(sourceslist)
-        
-        self.remote_cache = Cache(paths.remote,
-                                  options.remote,
-                                  chanko.archives,
-                                  gcache)
-                                  
-        self.local_cache  = Cache(paths.local,
-                                  options.local,
-                                  chanko.archives,
-                                  gcache)
-                                  
-        self.get = Get(paths.remote,
-                       options.remote,
-                       chanko.archives,
-                       gcache)
-
 
