@@ -210,13 +210,10 @@ class StatePaths(Paths):
 class State:
     def __init__(self, path):
         self.paths = StatePaths(path)
-        
-        if (not isdir(str(self.paths.apt)) or 
-            not isdir(str(self.paths.dpkg))):
             
-            makedirs(self.paths.apt)
-            makedirs(self.paths.dpkg)
-            file(self.paths.dpkg.status, "w").write("")
+        makedirs(self.paths.apt)
+        makedirs(self.paths.dpkg)
+        file(self.paths.dpkg.status, "w").write("")
 
 class CacheOptions:
     def __init__(self, chanko, cache, state):
@@ -338,13 +335,9 @@ class Apt:
         state = State(join(home, "state"))
         options = CacheOptions(chanko, paths, state.paths)
         
-        if (not isdir(str(paths.local)) or 
-            not isdir(str(paths.remote)) or
-            not isdir(gcache)):
-            
-            makedirs(join(paths.local.lists, "partial"))
-            makedirs(join(paths.remote.lists,"partial"))
-            makedirs(gcache)
+        makedirs(join(paths.local.lists, "partial"))
+        makedirs(join(paths.remote.lists,"partial"))
+        makedirs(gcache)
         
         sourceslist = "deb file:/// local debs"
         file(paths.local.sources_list, "w").write(sourceslist)
