@@ -38,7 +38,7 @@ def main():
         usage()
     
     chanko = Chanko()
-    if remote:
+    if remote and not chanko.remote_cache_auto_refreshed:
         chanko.remote_cache.refresh()
     
     if local:

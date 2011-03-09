@@ -45,7 +45,8 @@ def main():
     Chanko.init_create(sourceslist)
     if refresh:
         chanko = Chanko()
-        chanko.remote_cache.refresh()
+        if not chanko.remote_cache_auto_refreshed:
+            chanko.remote_cache.refresh()
 
 if __name__ == "__main__":
     main()

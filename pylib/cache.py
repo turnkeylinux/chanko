@@ -85,7 +85,7 @@ class Cache:
 
         self.archives = chanko_paths.archives
         state = State(join(homedir, 'state'))
-        
+
         _options = CacheOptions(chanko_paths, cachepaths, state.paths)
         options = {'remote': _options.remote,
                    'local':  _options.local}
@@ -96,7 +96,7 @@ class Cache:
         file(cachepaths.local.sources_list, "w").write(sourceslist)
 
         # reminder: arch
-        self.local_pkgcache = join(self.paths.lists, 
+        self.local_pkgcache = join(self.paths.lists,
                                    "_dists_local_debs_binary-i386_Packages")
 
     def _cmdcache(self, opts, sort=False):

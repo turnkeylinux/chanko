@@ -1,14 +1,10 @@
 import os
 import re
-import md5
 from os.path import *
 
 import executil
 
-from common import mkdir
-
-def md5sum(path):
-    return md5.md5(file(path, 'rb').read()).hexdigest()
+from common import mkdir, md5sum
 
 class Error(Exception):
     pass

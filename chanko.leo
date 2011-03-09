@@ -47,7 +47,8 @@
 </v>
 </v>
 <v t="loni.20101114184825" a="E"><vh>unreleased</vh>
-<v t="user.20110309123103" a="TV"><vh>filestructure</vh></v>
+<v t="user.20110309123103"><vh>filestructure</vh></v>
+<v t="user.20110309192327" a="TV"><vh>auto-refresh if sources.list changed</vh></v>
 </v>
 </v>
 <v t="loni.20100902123045.15"><vh>TODO</vh></v>
@@ -849,6 +850,15 @@ rocky.chanko/
         ...
 
 
+</t>
+<t tx="user.20110309192327">in apt, you have to initiate the update manually
+    should we auto-refresh?
+    print a warning message?
+
+if we auto-refresh, we must keep track that we auto-refreshed as not to refresh again immediately (if requested by the user)
+
+Q: how should we keep track of changes?
+    md5 checksum
 </t>
 </tnodes>
 </leo_file>

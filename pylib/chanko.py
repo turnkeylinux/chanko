@@ -9,7 +9,7 @@ from os.path import *
 
 from paths import Paths
 
-from common import mkdir
+from common import mkdir, md5sum
 from cache import Cache
 
 def realpath(path):
@@ -34,7 +34,10 @@ class ChankoPaths(Paths):
         os.environ['CHANKO_BASE'] = path
 
         Paths.__init__(self, self.base, ['config', 'archives'])
-        self.config = Paths(self.config, ['sources.list', 'cache_id', 'arch'])
+        self.config = Paths(self.config, ['sources.list',
+                                          'sources.list.md5',
+                                          'cache_id',
+                                          'arch'])
 
     @staticmethod
     def _is_arena(path):
@@ -74,6 +77,8 @@ class Chanko:
         mkdir(join(paths.archives, "partial"))
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
+        checksum = md5sum(paths.config.sources_list)
+        file(paths.config.sources_list_md5, "w").write(checksum)
 
         cache_id = cls._new_cache_id(paths.base)
         file(paths.config.cache_id, "w").write(cache_id)
@@ -90,4 +95,15 @@ class Chanko:
 
         self.remote_cache = Cache('remote', cache_id, self.paths)
         self.local_cache = Cache('local', cache_id, self.paths)
+
+        self.remote_cache_auto_refreshed = False
+        self._sources_list_updated()
+
+    def _sources_list_updated(self):
+        expected_checksum = file(self.paths.config.sources_list_md5, 'r').read()
+        current_checksum = md5sum(self.paths.config.sources_list)
+        if current_checksum != expected_checksum:
+            self.remote_cache.refresh()
+            self.remote_cache_auto_refreshed = True
+            file(self.paths.config.sources_list_md5, "w").write(current_checksum)
 
