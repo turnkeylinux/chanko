@@ -84,7 +84,7 @@ class Container:
 
         self.apt = Apt(self.paths)
 
-    def refresh(self, remote, local):
+    def refresh(self, remote=False, local=False):
         if remote:
             self.apt.remote_cache.refresh()
         

@@ -48,7 +48,7 @@ def main():
     container.Container.init_create(sourceslist)
     if refresh:
         cont = container.Container()
-        cont.refresh(remote=True, local=False)
+        cont.refresh(remote=True)
 
 
 if __name__ == "__main__":
