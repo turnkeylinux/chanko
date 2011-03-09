@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 import random
-import commands
+
 from os.path import *
 
 from paths import Paths
@@ -97,10 +97,13 @@ class Container:
             
     def query(self, remote, local, package, info=False, names=False, stats=False):
         if remote:
-            self.apt.remote_cache.query(package, info, names, stats)
+            if not exists(join(str(self.apt.remote_cache.paths), 'pkgcache.bin')):
+                self.apt.remote_cache.refresh()
+
+            return self.apt.remote_cache.query(package, info, names, stats)
         
         if local:
-            self.apt.local_cache.query(package, info, names, stats)
+            return self.apt.local_cache.query(package, info, names, stats)
 
     def get(self, packages, dir="", tree=False, force=False):
         if re.match("^/(.*)", dir):

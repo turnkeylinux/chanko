@@ -2,10 +2,11 @@
 
 import os
 import re
-import errno
-import commands
+
 from os.path import *
 from md5 import md5
+
+import executil
 
 from paths import Paths
 
@@ -32,12 +33,7 @@ def makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def system(command, *args):
-    command = command + " " + " ".join([commands.mkarg(arg) for arg in args])
-    err = os.system(command)
-    if err:
-        raise Error("command failed: " + command,
-                    os.WEXITSTATUS(err))
+system = executil.system
 
 class Error(Exception):
     pass
@@ -117,7 +113,7 @@ class Get:
 
     def _cmdget(self, opts):
         cmd = "apt-get %s --print-uris %s" % (self.options, opts)
-        return commands.getstatusoutput(cmd)
+        return executil.getoutput(cmd)
     
     @staticmethod
     def _parse_update_uris(raw):
@@ -149,7 +145,7 @@ class Get:
         return uris
     
     def update(self):
-        err, raw = self._cmdget("update")
+        raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
         for uri in uris:
@@ -188,17 +184,17 @@ class Get:
                                               join(self.gcache, unpacked)))
 
     def install(self, packages, dir, tree, force):
-        err, raw = self._cmdget("-y install %s" % " ".join(packages))
-        uris = self._parse_install_uris(raw)
-        
-        if len(uris) == 0:
+        try:
+            raw = self._cmdget("-y install %s" % " ".join(packages))
+            uris = self._parse_install_uris(raw)
+        except executil.ExecError, e:
             if re.search("Couldn\'t find package", raw):
                 print "Couldn't find package `%s'" % packages[0]
                 print "Querying index for similar package..."
                 c = Cache(self.paths, self.options, self.archives, self.gcache)
                 c.query(packages[0], info=False, names=True, stats=False)
             else:
-                raise Error ("cmdget returned error: ", err, raw)
+                raise Error("cmdget returned error: ", e)
 
             return False
 
@@ -291,9 +287,15 @@ class Cache:
         self.local_pkgcache = join(self.paths.lists, 
                                    "_dists_local_debs_binary-i386_Packages")
 
-    def _cmdcache(self, opts):
-        system("apt-cache %s %s" % (self.options, opts))
-    
+    def _cmdcache(self, opts, sort=False):
+        results = executil.getoutput("apt-cache %s %s" % (self.options, opts))
+        if sort:
+            results = results.splitlines()
+            results.sort()
+            results = "\n".join(results)
+
+        return results
+
     def refresh(self):
         if re.match("(.*)remote/lists(.*)", self.options):
             get = Get(self.paths, self.options, self.archives, self.gcache)
@@ -305,42 +307,43 @@ class Cache:
 
     def query(self, package, info, names, stats):
         if re.match("(.*)local/lists(.*)", self.options):
-            
+
             if (not exists(self.local_pkgcache) or
                 not getsize(self.local_pkgcache) > 0):
-                   
+
                 raise Error("container empty")
-                
+
         if not package and not info and not names:
             # list all packages with short description
-            self._cmdcache("search . | sort")
-            
+            results = self._cmdcache("search .", sort=True)
+
         elif not package and not info and names:
             # list all packages (without description)
-            self._cmdcache("pkgnames | sort")
-            
+            results = self._cmdcache("pkgnames", sort=True)
+
         elif not package and info and not names:
             # list full package information on all packages
-            self._cmdcache("dumpavail")
-            
+            results = self._cmdcache("dumpavail")
+
         elif package and not info and not names:
             # list all packages with short desc that match package_glob
-            self._cmdcache("search %s | sort" % package)
+            results = self._cmdcache("search %s" % package, sort=True)
 
         elif package and not info and names:
             # list all packages (without description) that match a package_glob
-            self._cmdcache("pkgnames %s | sort" % package)
-        
+            results = self._cmdcache("pkgnames %s" % package, sort=True)
+
         elif package and info and not names:
             # list info on specific package
-            self._cmdcache("show %s" % package)
-        
+            results = self._cmdcache("show %s" % package)
+
         else:
             print "options provided do not match a valid query"
-            
+
         if stats:
-            print
-            self._cmdcache("stats")
+            results += "\n\n" + self._cmdcache("stats")
+
+        return results
 
 class Apt:
     def __init__(self, container, create=False):
