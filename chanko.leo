@@ -48,10 +48,14 @@
 </v>
 <v t="loni.20101114184825" a="E"><vh>unreleased</vh>
 <v t="user.20110309123103"><vh>filestructure</vh></v>
-<v t="user.20110309192327" a="TV"><vh>auto-refresh if sources.list changed</vh></v>
+<v t="user.20110309192327"><vh>auto-refresh if sources.list changed</vh></v>
 </v>
 </v>
-<v t="loni.20100902123045.15"><vh>TODO</vh></v>
+<v t="loni.20100902123045.15" a="ETV"><vh>TODO</vh>
+<v t="user.20110309200120.3"><vh>chanko depends issue (cron instead of fcron)</vh></v>
+<v t="user.20110309200120.2"><vh>chanko-init should create sumo arena</vh></v>
+<v t="user.20110309200120"><vh>buckets</vh></v>
+</v>
 </v>
 </vnodes>
 <tnodes>
@@ -436,17 +440,13 @@ apt-cache $L_OPTIONS $@
 <t tx="loni.20100902123045.15">
 * container options
     * arch  i386 | amd64 | powerpc | sparc
-    * tree  BOOL
     
     cli options override container options
 
 * verify Release files (gpg)
 * research binany cache option in apt-ftparchive
 
-depends issue
-    i want to chanko-get apt-proxy, but it will pull in cron due to logrotate
-    we already have fcron downloaded, but its not installed, so apt will pull in cron
-    because logrotate depends: cron | anacron | fcron
+
     
 
 FUTURE 
@@ -859,6 +859,36 @@ if we auto-refresh, we must keep track that we auto-refreshed as not to refresh 
 
 Q: how should we keep track of changes?
     md5 checksum
+</t>
+<t tx="user.20110309200120">
+Buckets support would be useful for chanko repositories containing binaries as
+well as sources. The rocky chanko arena is already pretty slow.
+
+Whatever the low-level implementation for chanko buckets is like, the high level
+interface should tuck that away and present a unified appearance to the user.
+
+This could be accomplished by various means that should be more carefully
+researched, such as for example:
+* symbolic links into the bucket paths
+* a union filesystem
+
+Also, I'm not ruling out extending the Pool, Sumo, or Covin to better support
+Chanko.
+
+Example ideas off the top of my head (not necessarily good ones):
+* maybe buckets need to be supported directly in Sumo and not in Chanko
+* a Chanko repository could be a pool itself, so you wouldn't have to register
+buckets individually
+* or maybe it isn't a pool, but a special type of stock that the pool recognizes?
+* add Covin support so that you don't have to register chanko buckets separately
+either?
+</t>
+<t tx="user.20110309200120.2"></t>
+<t tx="user.20110309200120.3">
+i want to chanko-get apt-proxy, but it will pull in cron due to logrotate
+we already have fcron downloaded, but its not installed, so apt will pull in cron
+because logrotate depends: cron | anacron | fcron
+
 </t>
 </tnodes>
 </leo_file>
