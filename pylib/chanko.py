@@ -91,7 +91,7 @@ class Chanko:
                 raise Error("does not exist", path)
 
         mkdir(join(self.paths.archives, "partial"))
-        cache_id = file(self.paths.config.cache_id).read()
+        cache_id = file(self.paths.config.cache_id).read().strip()
 
         self.remote_cache = Cache('remote', cache_id, self.paths)
         self.local_cache = Cache('local', cache_id, self.paths)
@@ -100,8 +100,12 @@ class Chanko:
         self._sources_list_updated()
 
     def _sources_list_updated(self):
-        expected_checksum = file(self.paths.config.sources_list_md5, 'r').read()
         current_checksum = md5sum(self.paths.config.sources_list)
+        if exists(self.paths.config.sources_list_md5):
+            expected_checksum = file(self.paths.config.sources_list_md5).read().strip()
+        else:
+            expected_checksum = ""
+
         if current_checksum != expected_checksum:
             self.remote_cache.refresh()
             self.remote_cache_auto_refreshed = True
