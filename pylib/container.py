@@ -2,8 +2,9 @@
 
 import os
 import re
+import md5
+import time
 import shutil
-import random
 
 from os.path import *
 
@@ -16,9 +17,6 @@ def realpath(path):
         return os.path.realpath(path)
 
     return join(os.path.realpath(dirname(path)), basename(path))
-
-def randomkey():
-    return str(random.randint(100000000000, 999999999999))
 
 def makedirs(path):
     path = str(path)
@@ -56,6 +54,14 @@ class ContainerPaths(Paths):
 class Container:
     """ class for creating and controlling a chanko container """
 
+    @staticmethod
+    def _new_cache_id(s):
+        """calculates a guaranteed unique new cache_id"""
+        def digest(s):
+            return md5.md5(s).hexdigest()
+
+        return digest(s + `time.time()`)
+
     @classmethod
     def init_create(cls, sourceslist):
         """ create the container on the filesystem """
@@ -73,7 +79,8 @@ class Container:
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
         
-        file(paths.config.cache_id, "w").write(randomkey())
+        cache_id = cls._new_cache_id(paths.base)
+        file(paths.config.cache_id, "w").write(cache_id)
         
     def __init__(self):
         self.paths = ContainerPaths()
