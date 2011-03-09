@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
 <globals body_outline_ratio="0.393078970719">
-	<global_window_position top="0" left="5" height="709" width="1127"/>
+	<global_window_position top="10" left="10" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -51,9 +51,10 @@
 <v t="user.20110309192327"><vh>auto-refresh if sources.list changed</vh></v>
 </v>
 </v>
-<v t="loni.20100902123045.15" a="ETV"><vh>TODO</vh>
+<v t="loni.20100902123045.15" a="E"><vh>TODO</vh>
 <v t="user.20110309200120.3"><vh>chanko depends issue (cron instead of fcron)</vh></v>
 <v t="user.20110309200120.2"><vh>chanko-init should create sumo arena</vh></v>
+<v t="user.20110309202947" a="V"><vh>replace apt-ftparchive with debinfo</vh></v>
 <v t="user.20110309200120"><vh>buckets</vh></v>
 </v>
 </v>
@@ -890,5 +891,6 @@ we already have fcron downloaded, but its not installed, so apt will pull in cro
 because logrotate depends: cron | anacron | fcron
 
 </t>
+<t tx="user.20110309202947"></t>
 </tnodes>
 </leo_file>
