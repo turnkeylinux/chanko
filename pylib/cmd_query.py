@@ -61,8 +61,8 @@ def main():
     else:
         usage("bad number of arguments (package_glob)")
 
-    if not remote and not local:
-        usage("remote/local not specified")
+    if remote == local:
+        usage("either remote/local or local must be specified")
 
     chanko = Chanko()
     if remote:
