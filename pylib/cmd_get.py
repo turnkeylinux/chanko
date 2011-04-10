@@ -1,16 +1,17 @@
 #!/usr/bin/python
-# Copyright (c) 2010 Alon Swartz - all rights reserved
 """
 Get package(s) and their dependencies
 
-If a specific package version is requested, get that
-If a specific version is not requested, retrieve the newest version
+Arguments:
+  <packages> := ( path/to/inputfile | package[=version] ) ...
+                If a version isn't specified, the newest version is implied.
 
 Options:
   -f --force     Dont ask for confirmation before downloading
 
 """
 
+import re
 import sys
 import getopt
 from os.path import *
@@ -20,7 +21,31 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options] package[=version] ..." % sys.argv[0]
+    print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
+
+def parse_inputfile(path):
+    input = file(path, 'r').read().strip()
+
+    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
+    input = re.sub(r'//.*', '', input)
+
+    packages = set()
+    for expr in input.split('\n'):
+        expr = re.sub(r'#.*', '', expr)
+        expr = expr.strip()
+        expr = expr.rstrip("*")
+        if not expr:
+            continue
+
+        if expr.startswith("!"):
+            package = expr[1:]
+        else:
+            package = expr
+
+        packages.add(package)
+
+    return packages
+
 
 def main():
     try:
@@ -33,9 +58,15 @@ def main():
         if opt in ('-f', '--force'):
             opt_force = True
 
-    packages = args
-    if len(packages) == 0:
-        usage("no packages specified")
+    if len(args) == 0:
+        usage("bad number of arguments")
+
+    packages = set()
+    for arg in args:
+        if exists(arg):
+            packages.update(parse_inputfile(arg))
+        else:
+            packages.add(arg)
 
     chanko = Chanko()
 
