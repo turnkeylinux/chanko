@@ -11,41 +11,17 @@ Options:
 
 """
 
-import re
 import sys
 import getopt
 from os.path import *
 
 import help
+from common import parse_inputfile
 from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
-
-def parse_inputfile(path):
-    input = file(path, 'r').read().strip()
-
-    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
-    input = re.sub(r'//.*', '', input)
-
-    packages = set()
-    for expr in input.split('\n'):
-        expr = re.sub(r'#.*', '', expr)
-        expr = expr.strip()
-        expr = expr.rstrip("*")
-        if not expr:
-            continue
-
-        if expr.startswith("!"):
-            package = expr[1:]
-        else:
-            package = expr
-
-        packages.add(package)
-
-    return packages
-
 
 def main():
     try:
@@ -74,8 +50,9 @@ def main():
     if not exists(pkgcache):
         chanko.remote_cache.refresh()
 
-    chanko.remote_cache.get(packages, opt_force)
-    chanko.local_cache.refresh()
+    if chanko.remote_cache.get(packages, opt_force):
+        chanko.local_cache.refresh()
+        chanko.log.update(packages)
 
 
 if __name__ == "__main__":

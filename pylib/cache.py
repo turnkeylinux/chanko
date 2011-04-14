@@ -113,7 +113,7 @@ class Cache:
             raise Error('can only get packages if cache is remote')
 
         get = Get(self.paths, self.options, self.archives, self.gcache)
-        get.install(packages, force)
+        return get.install(packages, force)
 
     def refresh(self):
         if self.cache_type is 'remote':

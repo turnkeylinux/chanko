@@ -9,7 +9,7 @@ from os.path import *
 
 from paths import Paths
 
-from common import mkdir, md5sum
+from common import mkdir, md5sum, parse_inputfile
 from cache import Cache
 
 def realpath(path):
@@ -22,6 +22,18 @@ def realpath(path):
 class Error(Exception):
     pass
 
+class Log:
+    def __init__(self, path):
+        self.path = str(path)
+        if not exists(self.path):
+            file(self.path, "w").write("# Chanko Log\n")
+
+    def update(self, packages):
+        current = parse_inputfile(self.path)
+        for package in packages:
+            if package not in current:
+                file(self.path, "a").write("%s\n" % package)
+
 class ChankoPaths(Paths):
     def __init__(self, path=None):
         if path is None:
@@ -33,7 +45,7 @@ class ChankoPaths(Paths):
 
         os.environ['CHANKO_BASE'] = path
 
-        Paths.__init__(self, self.base, ['config', 'archives'])
+        Paths.__init__(self, self.base, ['config', 'archives', 'log'])
         self.config = Paths(self.config, ['sources.list',
                                           'sources.list.md5',
                                           'cache_id',
@@ -69,12 +81,13 @@ class Chanko:
         if not exists(sourceslist):
             raise Error("no such sources.list '%s'" % sourceslist)
 
-        for path in (paths.config, paths.archives):
+        for path in (paths.config, paths.archives, paths.log):
             if exists(str(path)):
                 raise Error("already exists", path)
 
         mkdir(paths.config)
         mkdir(join(paths.archives, "partial"))
+        Log(paths.log) # initialize log
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
         checksum = md5sum(paths.config.sources_list)
@@ -95,6 +108,7 @@ class Chanko:
 
         self.remote_cache = Cache('remote', cache_id, self.paths)
         self.local_cache = Cache('local', cache_id, self.paths)
+        self.log = Log(self.paths.log)
 
         self.remote_cache_auto_refreshed = False
         self._sources_list_updated()
