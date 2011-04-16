@@ -83,7 +83,7 @@ class Cache:
         self.gcache = join(homedir, 'caches', 'global')
         mkdir(self.gcache)
 
-        self.archives = chanko_paths.archives
+        self.chanko_paths = chanko_paths
         state = State(join(homedir, 'state'))
 
         _options = CacheOptions(chanko_paths, cachepaths, state.paths)
@@ -112,16 +112,17 @@ class Cache:
         if self.cache_type is not 'remote':
             raise Error('can only get packages if cache is remote')
 
-        get = Get(self.paths, self.options, self.archives, self.gcache)
+        get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
         return get.install(packages, force)
 
     def refresh(self):
         if self.cache_type is 'remote':
-            get = Get(self.paths, self.options, self.archives, self.gcache)
+            get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
             get.update()
         else:
-            executil.system("apt-ftparchive packages %s > %s" % (self.archives,
-                                                                 self.local_pkgcache))
+            executil.system("apt-ftparchive packages %s > %s" % 
+                            (self.chanko_paths.archives,
+                             self.local_pkgcache))
         self._cmdcache("gencaches")
 
     def query(self, package, info=False, names=False, stats=False):

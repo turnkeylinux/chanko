@@ -68,10 +68,10 @@ class Uri:
             os.symlink(self.path, dest)
 
 class Get:
-    def __init__(self, paths, options, archives, gcache):
-        self.paths = paths
+    def __init__(self, cache_paths, chanko_paths, options, gcache):
+        self.cache_paths = cache_paths
+        self.chanko_paths = chanko_paths
         self.options = options
-        self.archives = archives
         self.gcache = gcache
 
     def _cmdget(self, opts):
@@ -116,7 +116,7 @@ class Get:
                 release_uri = Uri(re.sub(".gpg", "", uri.url))
                 release_uri.set_destfile(re.sub(".gpg", "", uri.destfile))
                 release_uri.get(self.gcache)
-                release_uri.link(self.paths.lists)
+                release_uri.link(self.cache_paths.lists)
 
                 #reminder: get release.gpg and verify release integrity
                 #uri.get...
@@ -127,7 +127,7 @@ class Get:
                 updated = True
 
                 uri.set_path(self.gcache)
-                uri.link(self.paths.lists)
+                uri.link(self.cache_paths.lists)
 
                 unpacked = uri.destfile
                 uri.set_destfile(uri.destfile + ".bz2")
@@ -135,7 +135,9 @@ class Get:
 
                 m = re.match("(.*)_(.*)_(.*)_Packages.bz2", uri.destfile)
                 if m and isfile(uri.path):
-                    release = join(self.paths.lists, m.group(1)) + "_Release"
+                    release = join(self.cache_paths.lists, 
+                                   m.group(1)) + "_Release"
+
                     for line in file(release).readlines():
                         if re.search(md5sum(uri.path), line):
                             updated = False
@@ -190,7 +192,7 @@ class Get:
                 return False
 
         for uri in uris:
-            uri.get(self.archives)
+            uri.get(self.chanko_paths.archives)
             uri.md5_verify()
 
         return True
