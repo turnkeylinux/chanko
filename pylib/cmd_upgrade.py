@@ -39,7 +39,9 @@ def main():
         usage("log file not found: %s" % chanko.paths.log)
 
     packages = parse_inputfile(chanko.paths.log)
-    chanko.remote_cache.get(packages, opt_force)
+    if chanko.remote_cache.get(packages, opt_force):
+        chanko.local_cache.refresh()
+
 
 if __name__ == "__main__":
     main()
