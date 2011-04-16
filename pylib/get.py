@@ -96,7 +96,7 @@ class Get:
         uris = []
         for line in raw.split("\n"):
             if re.match("Need to get 0B(.*)", line):
-                raise Error("Newest version already in chanko")
+                return False
 
             m = re.match("\'(.*)\' (.*) (.*) (.*)", line)
             if m:
@@ -170,6 +170,10 @@ class Get:
 
             return False
 
+        if not uris:
+            print "Archive(s) already in chanko"
+            return False
+
         size = 0
         print "Packages to get:"
         for uri in uris:
@@ -182,7 +186,8 @@ class Get:
         if not force:
             print "Do you want to continue [y/N]?",
             if not raw_input() in ['Y', 'y']:
-                raise Error("aborted by user")
+                print "aborted by user"
+                return False
 
         for uri in uris:
             uri.get(self.archives)
