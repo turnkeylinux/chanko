@@ -117,9 +117,11 @@ class Cache:
 
     def refresh(self):
         if self.cache_type is 'remote':
+            print "Refreshing remote cache..."
             get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
             get.update()
         else:
+            print "Refreshing local cache..."
             executil.system("apt-ftparchive packages %s > %s" % 
                             (self.chanko_paths.archives,
                              self.local_pkgcache))
