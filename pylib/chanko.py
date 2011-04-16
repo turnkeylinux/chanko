@@ -49,6 +49,7 @@ class ChankoPaths(Paths):
         self.config = Paths(self.config, ['sources.list',
                                           'sources.list.md5',
                                           'cache_id',
+                                          'blacklist',
                                           'arch'])
 
     @staticmethod

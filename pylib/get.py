@@ -4,7 +4,7 @@ from os.path import *
 
 import executil
 
-from common import mkdir, md5sum
+from common import mkdir, md5sum, parse_inputfile
 
 class Error(Exception):
     pass
@@ -96,7 +96,7 @@ class Get:
         uris = []
         for line in raw.split("\n"):
             if re.match("Need to get 0B(.*)", line):
-                return False
+                return []
 
             m = re.match("\'(.*)\' (.*) (.*) (.*)", line)
             if m:
@@ -160,10 +160,28 @@ class Get:
         else:
             return str(bytes/K) + "K"
 
+    def _remove_blacklisted(self, uris):
+        blacklist_path = self.chanko_paths.config.blacklist
+        if not exists(blacklist_path) or len(uris) == 0:
+            return uris
+
+        blacklist = parse_inputfile(blacklist_path)
+        if len(blacklist) == 0:
+            return uris
+
+        cleaned_uris = []
+        for uri in uris:
+            name, version = uri.filename.split("_")[:2]
+            if name in blacklist:
+                print "Blacklisted package: %s" % uri.filename
+            else:
+                cleaned_uris.append(uri)
+
+        return cleaned_uris
+
     def install(self, packages, force):
         try:
-            raw = self._cmdget("-y install %s" % " ".join(packages))
-            uris = self._parse_install_uris(raw)
+            raw_uris = self._cmdget("-y install %s" % " ".join(packages))
         except executil.ExecError, e:
             if re.search("Couldn\'t find package", e[2]):
                 print "Couldn't find package '%s'" % e[2].split()[-1]
@@ -172,7 +190,10 @@ class Get:
 
             return False
 
-        if not uris:
+        uris = self._parse_install_uris(raw_uris)
+        uris = self._remove_blacklisted(uris)
+
+        if len(uris) == 0:
             print "Archive(s) already in chanko"
             return False
 
