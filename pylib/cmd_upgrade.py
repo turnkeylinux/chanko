@@ -3,8 +3,8 @@
 Upgrade chanko archives according to log file
 
 Options:
-  -f --force     Dont ask for confirmation before downloading
-
+  -p --purge     Purge superceded archives
+  -f --force     Dont ask for confirmation before downloading and purging
 """
 
 import sys
@@ -12,6 +12,7 @@ import getopt
 from os.path import *
 
 import help
+from cmd_purge import purge
 from common import parse_inputfile
 from chanko import Chanko
 
@@ -26,9 +27,12 @@ def main():
         usage(e)
 
     opt_force = False
+    opt_purge = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
             opt_force = True
+        elif opt in ('-p', '--purge'):
+            opt_purge = True
 
     chanko = Chanko()
 
@@ -40,6 +44,9 @@ def main():
 
     packages = parse_inputfile(chanko.paths.log)
     if chanko.remote_cache.get(packages, opt_force):
+        if opt_purge:
+            purge(chanko.paths.archives, opt_force)
+
         chanko.local_cache.refresh()
 
 
