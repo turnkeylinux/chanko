@@ -14,6 +14,7 @@ from os.path import *
 
 from pyproject.pool.pool import PackageCache
 import debversion
+import executil
 
 import help
 from chanko import Chanko
@@ -59,7 +60,7 @@ def purge(path, force):
 
     print "Deleting..."
     for candidate in candidates:
-        os.remove(candidate)
+        executil.system('sumo-rm %s' % candidate)
 
     return True
 
