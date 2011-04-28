@@ -2,11 +2,18 @@
 import re
 import os
 import md5
+import hashlib
 
 def mkdir(path):
     path = str(path)
     if not os.path.exists(path):
         os.makedirs(path)
+
+def sha256sum(path):
+    if os.path.exists(path):
+        return hashlib.sha256(file(path, 'rb').read()).hexdigest()
+
+    return False
 
 def md5sum(path):
     if os.path.exists(path):

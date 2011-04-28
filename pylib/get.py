@@ -4,7 +4,7 @@ from os.path import *
 
 import executil
 
-from common import mkdir, md5sum, parse_inputfile
+from common import mkdir, md5sum, sha256sum, parse_inputfile
 
 class Error(Exception):
     pass
@@ -15,7 +15,7 @@ class Uri:
         self.filename = basename(url)
         self.destfile = None
         self.path = None
-        self.md5sum = None
+        self.checksum = None
         self.size = 0
 
     @staticmethod
@@ -52,15 +52,23 @@ class Uri:
         else:
             executil.system("curl -L -f %s -o %s" % (self.url, self.path))
 
-    def md5_verify(self):
+    def checksum_verify(self):
         if not self.path:
             raise Error("no path set for: " + self.filename)
 
-        if not self.md5sum:
-            raise Error("no md5sum set for: " + self.path)
+        if not self.checksum:
+            raise Error("no checksum set for: " + self.path)
 
-        if not self.md5sum == md5sum(self.path):
-            raise Error("md5sum verification failed: %s" % self.path)
+        if not len(self.checksum) in (32, 64):
+            raise Error('unknown checksum size: %s' % self.path)
+
+        if len(self.checksum) == 32:
+            if not self.checksum == md5sum(self.path):
+                raise Error("md5sum verification failed: %s" % self.path)
+        else:
+            if not self.checksum == sha256sum(self.path):
+                raise Error("sha256sum verification failed: %s" % self.path)
+
 
     def link(self, link_path):
         dest = join(link_path, self.destfile)
@@ -102,7 +110,7 @@ class Get:
             if m:
                 uri = Uri(m.group(1))
                 uri.size = int(m.group(3))
-                uri.md5sum = m.group(4)
+                uri.checksum = re.sub('SHA256:', '', m.group(4))
 
                 uris.append(uri)
         return uris
@@ -214,7 +222,7 @@ class Get:
 
         for uri in uris:
             uri.get(self.chanko_paths.archives)
-            uri.md5_verify()
+            uri.checksum_verify()
 
         return True
 
