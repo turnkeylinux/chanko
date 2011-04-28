@@ -2,8 +2,8 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="0" clone_windows="0"/>
-<globals body_outline_ratio="0.281277728483">
-	<global_window_position top="0" left="5" height="709" width="1127"/>
+<globals body_outline_ratio="0.393078970719">
+	<global_window_position top="10" left="10" height="709" width="1127"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -14,7 +14,7 @@
 <v t="loni.20100906222353.1"><vh>initial release</vh></v>
 </v>
 <v t="loni.20100902123045.6" a="E"><vh>development log</vh>
-<v t="loni.20100906214807" a="TV"><vh>v0.5 - initial release</vh>
+<v t="loni.20100906214807"><vh>v0.5 - initial release</vh>
 <v t="loni.20100902123045.7"><vh>exploration</vh>
 <v t="loni.20100902123045.8"><vh>conf</vh></v>
 <v t="loni.20100902123045.9"><vh>init</vh></v>
@@ -46,9 +46,17 @@
 <v t="loni.20100906132825.1"><vh>global packages/releases</vh></v>
 </v>
 </v>
-<v t="loni.20101114184825"><vh>unreleased</vh></v>
+<v t="loni.20101114184825" a="E"><vh>unreleased</vh>
+<v t="user.20110309123103"><vh>filestructure</vh></v>
+<v t="user.20110309192327"><vh>auto-refresh if sources.list changed</vh></v>
 </v>
-<v t="loni.20100902123045.15"><vh>TODO</vh></v>
+</v>
+<v t="loni.20100902123045.15" a="E"><vh>TODO</vh>
+<v t="user.20110309200120.3"><vh>chanko depends issue (cron instead of fcron)</vh></v>
+<v t="user.20110309200120.2"><vh>chanko-init should create sumo arena</vh></v>
+<v t="user.20110309202947" a="V"><vh>replace apt-ftparchive with debinfo</vh></v>
+<v t="user.20110309200120"><vh>buckets</vh></v>
+</v>
 </v>
 </vnodes>
 <tnodes>
@@ -433,17 +441,13 @@ apt-cache $L_OPTIONS $@
 <t tx="loni.20100902123045.15">
 * container options
     * arch  i386 | amd64 | powerpc | sparc
-    * tree  BOOL
     
     cli options override container options
 
 * verify Release files (gpg)
 * research binany cache option in apt-ftparchive
 
-depends issue
-    i want to chanko-get apt-proxy, but it will pull in cron due to logrotate
-    we already have fcron downloaded, but its not installed, so apt will pull in cron
-    because logrotate depends: cron | anacron | fcron
+
     
 
 FUTURE 
@@ -828,5 +832,65 @@ Enjoy.
 
 </t>
 <t tx="loni.20101114184825"></t>
+<t tx="user.20110309123103">remove .container
+don't store packages multople times?
+hash -&gt; cache_id
+
+
+
+Q: do we really need to store the downloaded packages in tree directory structure?
+    i never 'browse' the downloaded packages
+    if we really want them, we can get them from pool into what ever structure we want
+    it should be as simple as possible
+
+rocky.chanko/
+    config/
+        sources.list
+        cache_id
+    packages/
+        ...
+
+
+</t>
+<t tx="user.20110309192327">in apt, you have to initiate the update manually
+    should we auto-refresh?
+    print a warning message?
+
+if we auto-refresh, we must keep track that we auto-refreshed as not to refresh again immediately (if requested by the user)
+
+Q: how should we keep track of changes?
+    md5 checksum
+</t>
+<t tx="user.20110309200120">
+Buckets support would be useful for chanko repositories containing binaries as
+well as sources. The rocky chanko arena is already pretty slow.
+
+Whatever the low-level implementation for chanko buckets is like, the high level
+interface should tuck that away and present a unified appearance to the user.
+
+This could be accomplished by various means that should be more carefully
+researched, such as for example:
+* symbolic links into the bucket paths
+* a union filesystem
+
+Also, I'm not ruling out extending the Pool, Sumo, or Covin to better support
+Chanko.
+
+Example ideas off the top of my head (not necessarily good ones):
+* maybe buckets need to be supported directly in Sumo and not in Chanko
+* a Chanko repository could be a pool itself, so you wouldn't have to register
+buckets individually
+* or maybe it isn't a pool, but a special type of stock that the pool recognizes?
+* add Covin support so that you don't have to register chanko buckets separately
+either?
+</t>
+<t tx="user.20110309200120.2"></t>
+<t tx="user.20110309200120.3">
+i want to chanko-get apt-proxy, but it will pull in cron due to logrotate
+we already have fcron downloaded, but its not installed, so apt will pull in cron
+because logrotate depends: cron | anacron | fcron
+
+</t>
+<t tx="user.20110309202947"></t>
 </tnodes>
 </leo_file>

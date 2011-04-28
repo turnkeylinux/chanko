@@ -1,58 +1,59 @@
 #!/usr/bin/python
-# Copyright (c) 2010 Alon Swartz - all rights reserved
 """
 Get package(s) and their dependencies
 
-If a specific package version is requested, get that
-If a specific version is not requested, retrieve the newest version
+Arguments:
+  <packages> := ( path/to/inputfile | package[=version] ) ...
+                If a version isn't specified, the newest version is implied.
 
 Options:
-  --dir=         Relative directory path to CHANKO_BASE for package storage
-                 Default is CHANKO_BASE
-  --tree         Package storage in tree format (resembles automatic repository)
-                     $dir/c/chanko/chanko-<version>.<arch>.deb
-                 instead of
-                     $dir/chanko-<version>.<arch>.deb
-  --force        Dont ask for confirmation before downloading
+  -f --force     Dont ask for confirmation before downloading
 
 """
 
-import re
 import sys
 import getopt
-import container
+from os.path import *
+
 import help
+from common import parse_inputfile
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options] package[=version] ..." % sys.argv[0]
-
-def warn(s):
-    print >> sys.stderr, "warning: " + str(s)
+    print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "",
-                                   ['dir=', 'tree', 'force'])
-
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":f", ['force'])
     except getopt.GetoptError, e:
         usage(e)
 
-    kws={}
-    remote = False
-    local = False
+    opt_force = False
     for opt, val in opts:
-        if opt in ('--tree', '--force'):
-            kws[opt[2:]] = True
-        else:
-            kws[opt[2:]] = val
-    
+        if opt in ('-f', '--force'):
+            opt_force = True
+
     if len(args) == 0:
-        usage("no packages specified")
+        usage("bad number of arguments")
 
-    cont = container.Container()
-    cont.get(args, **kws)
+    packages = set()
+    for arg in args:
+        if exists(arg):
+            packages.update(parse_inputfile(arg))
+        else:
+            packages.add(arg)
 
-    
+    chanko = Chanko()
+
+    pkgcache = join(str(chanko.remote_cache.paths), 'pkgcache.bin')
+    if not exists(pkgcache):
+        chanko.remote_cache.refresh()
+
+    if chanko.remote_cache.get(packages, opt_force):
+        chanko.local_cache.refresh()
+        chanko.log.update(packages)
+
+
 if __name__ == "__main__":
     main()
