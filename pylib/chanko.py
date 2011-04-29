@@ -9,7 +9,7 @@ from os.path import *
 
 from paths import Paths
 
-from common import mkdir, md5sum, parse_inputfile
+from common import mkdir, md5sum
 from cache import Cache
 
 def realpath(path):
@@ -25,14 +25,29 @@ class Error(Exception):
 class Log:
     def __init__(self, path):
         self.path = str(path)
-        if not exists(self.path):
-            file(self.path, "w").write("# Chanko Log\n")
 
-    def update(self, packages):
-        current = parse_inputfile(self.path)
-        for package in packages:
-            if package not in current:
-                file(self.path, "a").write("%s\n" % package)
+        if isfile(self.path):
+            raise Error('incompatible log file, please remove: %s' % self.path)
+
+        if not exists(self.path):
+            mkdir(self.path)
+
+    def update(self, pkgnames):
+        for pkgname in pkgnames:
+            pkgpath = join(self.path, pkgname)
+            if not exists(pkgpath):
+                file(pkgpath, "w").write("")
+
+    def list(self):
+        pkgnames = []
+        for pkgname in os.listdir(self.path):
+            pkgpath = join(self.path, pkgname)
+            if not isfile(join(self.path, pkgname)):
+                continue
+
+            pkgnames.append(pkgname)
+
+        return pkgnames
 
 class ChankoPaths(Paths):
     def __init__(self, path=None):

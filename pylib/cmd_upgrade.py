@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-Upgrade chanko archives according to log file
+Upgrade chanko archives according to log
 
 Options:
   -p --purge     Purge superceded archives
@@ -13,7 +13,6 @@ from os.path import *
 
 import help
 from cmd_purge import purge
-from common import parse_inputfile
 from chanko import Chanko
 
 @help.usage(__doc__)
@@ -39,11 +38,7 @@ def main():
     chanko.remote_cache.refresh()
     chanko.local_cache.refresh()
 
-    if not exists(chanko.paths.log):
-        usage("log file not found: %s" % chanko.paths.log)
-
-    packages = parse_inputfile(chanko.paths.log)
-    if chanko.remote_cache.get(packages, opt_force):
+    if chanko.remote_cache.get(chanko.log.list(), opt_force):
         if opt_purge:
             purge(chanko.paths.archives, opt_force)
 
