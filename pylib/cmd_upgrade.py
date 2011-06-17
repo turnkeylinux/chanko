@@ -14,6 +14,7 @@ from os.path import *
 import help
 from cmd_purge import purge
 from chanko import Chanko
+from common import promote_depends
 
 @help.usage(__doc__)
 def usage():
@@ -38,7 +39,8 @@ def main():
     chanko.remote_cache.refresh()
     chanko.local_cache.refresh()
 
-    if chanko.remote_cache.get(chanko.log.list(), opt_force):
+    toget = promote_depends(chanko.remote_cache, chanko.log.list())
+    if chanko.remote_cache.get(toget, opt_force):
         if opt_purge:
             purge(chanko.paths.archives, opt_force)
 
