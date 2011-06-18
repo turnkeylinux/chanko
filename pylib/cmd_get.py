@@ -16,7 +16,7 @@ import getopt
 from os.path import *
 
 import help
-from common import parse_inputfile
+from common import parse_inputfile, promote_depends
 from chanko import Chanko
 
 @help.usage(__doc__)
@@ -50,7 +50,8 @@ def main():
     if not exists(pkgcache):
         chanko.remote_cache.refresh()
 
-    if chanko.remote_cache.get(packages, opt_force):
+    toget = promote_depends(chanko.remote_cache, packages)
+    if chanko.remote_cache.get(toget, opt_force):
         chanko.local_cache.refresh()
         chanko.log.update(packages)
 
