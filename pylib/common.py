@@ -6,6 +6,9 @@ import hashlib
 
 import debinfo
 
+class Error(Exception):
+    pass
+
 def mkdir(path):
     path = str(path)
     if not os.path.exists(path):
