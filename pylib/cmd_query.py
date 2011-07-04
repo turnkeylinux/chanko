@@ -32,7 +32,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "rl",
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "rl",
                                    ['remote', 'local', 
                                     'info', 'names', 'stats'])
 
