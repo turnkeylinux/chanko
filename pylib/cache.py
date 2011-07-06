@@ -62,7 +62,7 @@ class CachePaths(Paths):
     def __init__(self, path):
         Paths.__init__(self, path, ['local', 'remote'])
         
-        self.local  = Paths(self.local,  ['lists', 'sources.list'])
+        self.local  = Paths(self.local,  ['lists', 'sources.list', 'dbcache'])
         self.remote = Paths(self.remote, ['lists'])
 
 class Cache:
@@ -122,8 +122,9 @@ class Cache:
             get.update()
         else:
             print "Refreshing local cache..."
-            executil.system("apt-ftparchive packages %s > %s" % 
-                            (self.chanko_paths.archives,
+            executil.system("apt-ftparchive packages --db=%s %s > %s" %
+                            (self.paths.dbcache,
+                             self.chanko_paths.archives,
                              self.local_pkgcache))
         self._cmdcache("gencaches")
 
