@@ -108,11 +108,14 @@ class Cache:
 
         return results
 
-    def get(self, packages, force=False):
+    def get(self, packages, force=False, pretend=False):
         if self.cache_type is not 'remote':
             raise Error('can only get packages if cache is remote')
 
         get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
+        if pretend:
+            return get.get_install_uris(packages)
+
         return get.install(packages, force)
 
     def refresh(self):

@@ -187,7 +187,7 @@ class Get:
 
         return cleaned_uris
 
-    def install(self, packages, force):
+    def get_install_uris(self, packages):
         try:
             raw_uris = self._cmdget("-y install %s" % " ".join(packages))
         except executil.ExecError, e:
@@ -200,7 +200,10 @@ class Get:
 
         uris = self._parse_install_uris(raw_uris)
         uris = self._remove_blacklisted(uris)
+        return uris
 
+    def install(self, packages, force):
+        uris = self.get_install_uris(packages)
         if len(uris) == 0:
             print "Archive(s) already in chanko"
             return False

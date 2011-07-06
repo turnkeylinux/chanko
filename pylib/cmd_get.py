@@ -7,6 +7,7 @@ Arguments:
                 If a version isn't specified, the newest version is implied.
 
 Options:
+  -p --pretend   Displays which packages would be downloaded
   -f --force     Dont ask for confirmation before downloading
 
 """
@@ -23,19 +24,30 @@ from chanko import Chanko
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
 
+def display_uris(uris):
+    for uri in uris:
+        print uri.filename
+
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], ":f", ['force'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp",
+                                       ['force', 'pretend'])
     except getopt.GetoptError, e:
         usage(e)
 
     opt_force = False
+    opt_pretend = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
             opt_force = True
+        elif opt in ('-p', '--pretend'):
+            opt_pretend = True
 
     if len(args) == 0:
         usage("bad number of arguments")
+
+    if opt_force and opt_pretend:
+        usage("conflicting options: --force, --pretend")
 
     packages = set()
     for arg in args:
@@ -51,10 +63,15 @@ def main():
         chanko.remote_cache.refresh()
 
     toget = promote_depends(chanko.remote_cache, packages)
-    if chanko.remote_cache.get(toget, opt_force):
+    if opt_pretend:
+        uris = chanko.remote_cache.get(toget, pretend=True)
+        display_uris(uris)
+
+    elif chanko.remote_cache.get(toget, opt_force):
         chanko.local_cache.refresh()
         chanko.log.update(packages)
 
 
 if __name__ == "__main__":
     main()
+
