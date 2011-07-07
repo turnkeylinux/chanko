@@ -120,15 +120,18 @@ class Get:
         uris = self._parse_update_uris(raw)
 
         for uri in uris:
-            if uri.filename == "Release.gpg":
-                release_uri = Uri(re.sub(".gpg", "", uri.url))
-                release_uri.set_destfile(re.sub(".gpg", "", uri.destfile))
-                release_uri.get(self.gcache)
-                release_uri.link(self.cache_paths.lists)
+            if uri.filename == "Release":
+                release = uri
+            elif uri.filename == "Release.gpg":
+                release_gpg = uri
 
-                #reminder: get release.gpg and verify release integrity
-                #uri.get...
-                #uri.gpg_verify...
+        for uri in (release, release_gpg):
+            uri.get(self.gcache)
+            uri.link(self.cache_paths.lists)
+        
+        # will raise an error if verification fails
+        # exitcodes (0 - successfull, 1 - failed, 2 - key not available)
+        executil.getoutput("gpg --verify", release_gpg.path, release.path)
 
         for uri in uris:
             if uri.filename == "Packages.bz2":
