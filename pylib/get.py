@@ -135,29 +135,20 @@ class Get:
 
         for uri in uris:
             if uri.filename == "Packages.bz2":
-                updated = True
-
                 uri.set_path(self.gcache)
                 uri.link(self.cache_paths.lists)
 
-                unpacked = uri.destfile
+                #skip download if local packages file is latest
+                if exists(uri.path):
+                    content = file(release.path).read()
+                    if re.search(md5sum(uri.path), content):
+                        continue
+
+                unpack_path = join(self.gcache, uri.destfile)
                 uri.set_destfile(uri.destfile + ".bz2")
                 uri.set_path(self.gcache)
-
-                m = re.match("(.*)_(.*)_(.*)_Packages.bz2", uri.destfile)
-                if m and isfile(uri.path):
-                    release = join(self.cache_paths.lists, 
-                                   m.group(1)) + "_Release"
-
-                    for line in file(release).readlines():
-                        if re.search(md5sum(uri.path), line):
-                            updated = False
-                            break
-
-                if updated:
-                    uri.get()
-                    executil.system("bzcat %s > %s" % 
-                                    (uri.path, join(self.gcache, unpacked)))
+                uri.get()
+                executil.system("bzcat %s > %s" % (uri.path, unpack_path))
 
     @staticmethod
     def _fmt_bytes(bytes):
