@@ -69,7 +69,6 @@ class Uri:
             if not self.checksum == sha256sum(self.path):
                 raise Error("sha256sum verification failed: %s" % self.path)
 
-
     def link(self, link_path):
         dest = join(link_path, self.destfile)
         if not islink(dest):
@@ -148,6 +147,9 @@ class Get:
                 uri.set_destfile(uri.destfile + ".bz2")
                 uri.set_path(self.gcache)
                 uri.get()
+                if not re.search(md5sum(uri.path), content):
+                    raise Error("checksum verification failed\npath: %s\nexpected checksum: %s\nreleases file: %s" % (uri.path, md5sum(uri.path), release.path))
+
                 executil.system("bzcat %s > %s" % (uri.path, unpack_path))
 
     @staticmethod
