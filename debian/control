@@ -7,5 +7,5 @@ Standards-Version: 3.6.1
 
 Package: chanko
 Architecture: any
-Depends: pyproject-common, sumo, pool, curl, bzip2
+Depends: pyproject-common, sumo, pool, curl, bzip2, gnupg
 Description: efficiently get packages from public sources to be shared via sumo
