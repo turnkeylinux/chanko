@@ -64,10 +64,10 @@ class Uri:
 
         if len(self.checksum) == 32:
             if not self.checksum == md5sum(self.path):
-                raise Error("md5sum verification failed: %s" % self.path)
+                raise Error("md5sum verification failed: %s\nexpected checksum: %s\ncalculated checksum: %s" % (self.path, self.checksum, md5sum(self.path)))
         else:
             if not self.checksum == sha256sum(self.path):
-                raise Error("sha256sum verification failed: %s" % self.path)
+                raise Error("sha256sum verification failed: %s\nexpected checksum: %s\ncalculated checksum: %s" % (self.path, self.checksum, sha256sum(self.path)))
 
     def link(self, link_path):
         dest = join(link_path, self.destfile)
