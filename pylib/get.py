@@ -9,6 +9,27 @@ from common import mkdir, md5sum, sha256sum, parse_inputfile
 class Error(Exception):
     pass
 
+class ChecksumError(Exception):
+    """Accessible attibutes:
+    path           path of file which failed checksum verification
+    expected       expected checksum
+    calculated     calculated checksum
+    """
+
+    def __init__(self, path, expected, calculated):
+        Exception.__init__(self, path, expected, calculated)
+
+        self.path = path
+        self.expected = expected
+        self.calculated = calculated
+
+    def __str__(self):
+        str = "checksum verification failed: %s" % self.path
+        str += "\nexpected: %s" % self.expected
+        str += "\ncalculated: %s" % self.calculated
+
+        return str
+
 class Uri:
     def __init__(self, url):
         self.url = url
@@ -64,10 +85,10 @@ class Uri:
 
         if len(self.checksum) == 32:
             if not self.checksum == md5sum(self.path):
-                raise Error("md5sum verification failed: %s\nexpected checksum: %s\ncalculated checksum: %s" % (self.path, self.checksum, md5sum(self.path)))
+                raise ChecksumError(self.path, self.checksum, md5sum(self.path))
         else:
             if not self.checksum == sha256sum(self.path):
-                raise Error("sha256sum verification failed: %s\nexpected checksum: %s\ncalculated checksum: %s" % (self.path, self.checksum, sha256sum(self.path)))
+                raise ChecksumError(self.path, self.checksum, sha256sum(self.path))
 
     def link(self, link_path):
         dest = join(link_path, self.destfile)
@@ -148,7 +169,9 @@ class Get:
                 uri.set_path(self.gcache)
                 uri.get()
                 if not re.search(md5sum(uri.path), content):
-                    raise Error("checksum verification failed\npath: %s\nexpected checksum: %s\nreleases file: %s" % (uri.path, md5sum(uri.path), release.path))
+                    raise ChecksumError(uri.path,
+                                        "releases file: %s" % release.path,
+                                        md5sum(uri.path))
 
                 executil.system("bzcat %s > %s" % (uri.path, unpack_path))
 
