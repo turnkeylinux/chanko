@@ -65,6 +65,7 @@ class ChankoPaths(Paths):
                                           'sources.list.md5',
                                           'cache_id',
                                           'blacklist',
+                                          'trustedkeys.gpg',
                                           'arch'])
 
     @staticmethod

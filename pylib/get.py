@@ -136,6 +136,10 @@ class Get:
         return uris
 
     def update(self):
+        trustedkeys_path = self.chanko_paths.config.trustedkeys_gpg
+        if not exists(trustedkeys_path):
+            raise Error("trustedkeys keyring not found: %s" % trustedkeys_path)
+
         raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
@@ -150,8 +154,10 @@ class Get:
             uri.link(self.cache_paths.lists)
         
         # will raise an error if verification fails
-        # exitcodes (0 - successfull, 1 - failed, 2 - key not available)
-        executil.getoutput("gpg --verify", release_gpg.path, release.path)
+        executil.getoutput("gpgv --keyring", 
+                           trustedkeys_path, 
+                           release_gpg.path, 
+                           release.path)
 
         for uri in uris:
             if uri.filename == "Packages.bz2":
