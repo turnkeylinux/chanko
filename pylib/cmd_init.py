@@ -3,10 +3,15 @@
 """
 Initialize a new chanko
 
-If sources.list is specified, it will be used and chanko will be refreshed
-post initialization.
+Arguments:
+  sources.list          Path to sources.list
+  trustedkeys.gpg       Path to trustedkeys.gpg used for Release verification
 
-If --dummy is specified, an exemplary sources.list will be created.
+If sources.list and trustedkeys.gpg are specified, they will be used and chanko
+will be refreshed post initialization.
+
+If --dummy is specified, an exemplary sources.list with matching trustedkeys.gpg
+will be created.
 
 """
 import sys
@@ -17,32 +22,40 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s /path/to/sources.list | --dummy" % sys.argv[0]
+    print >> sys.stderr, "Syntax: %s <sources.list> <trustedkeys.gpg> | --dummy" % sys.argv[0]
 
-def get_dummy_sourceslist():
-    INSTALL_PATH = dirname(dirname(__file__))
-    
-    paths = (join(INSTALL_PATH, 'contrib/sources.list'),
-             join(dirname(INSTALL_PATH), 'share/chanko/contrib/sources.list'))
+def get_dummy_files():
+    def f(file):
+        INSTALL_PATH = dirname(dirname(__file__))
+        paths = (join(INSTALL_PATH, 'contrib', file),
+                 join(dirname(INSTALL_PATH), 'share/chanko/contrib', file))
 
-    for path in paths:
-        if exists(path):
-            return path
+        for path in paths:
+            if exists(path):
+                return path
 
-    usage('dummy sources.list file not found: ' + paths)
+        usage('could not find \'%s\' in: ' + paths)
+
+    ret = []
+    for file in ('sources.list', 'trustedkeys.gpg'):
+        ret.append(f(file))
+
+    return ret
 
 def main():
-    if len(sys.argv) != 2:
-        usage()
-
-    if sys.argv[1] == "--dummy":
-        sourceslist = get_dummy_sourceslist()
+    if len(sys.argv) == 2 and sys.argv[1] == "--dummy":
+        sourceslist, trustedkeys = get_dummy_files()
         refresh = False
-    else:
+
+    elif len(sys.argv) == 3:
         sourceslist = sys.argv[1]
+        trustedkeys = sys.argv[2]
         refresh = True
 
-    Chanko.init_create(sourceslist)
+    else:
+        usage("bad number of arguments")
+
+    Chanko.init_create(sourceslist, trustedkeys)
     if refresh:
         chanko = Chanko()
         if not chanko.remote_cache_auto_refreshed:

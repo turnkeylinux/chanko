@@ -91,12 +91,13 @@ class Chanko:
         return digest(s + `time.time()`)
 
     @classmethod
-    def init_create(cls, sourceslist):
+    def init_create(cls, sourceslist, trustedkeys):
         """ create the chanko on the filesystem """
         paths = ChankoPaths()
 
-        if not exists(sourceslist):
-            raise Error("no such sources.list '%s'" % sourceslist)
+        for path in (sourceslist, trustedkeys):
+            if not exists(path):
+                raise Error("does not exist: %s" % path)
 
         for path in (paths.config, paths.archives, paths.log):
             if exists(str(path)):
@@ -107,6 +108,8 @@ class Chanko:
         Log(paths.log) # initialize log
 
         shutil.copyfile(sourceslist, paths.config.sources_list)
+        shutil.copyfile(trustedkeys, paths.config.trustedkeys_gpg)
+
         checksum = md5sum(paths.config.sources_list)
         file(paths.config.sources_list_md5, "w").write(checksum)
 
