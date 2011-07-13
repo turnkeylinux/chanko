@@ -164,19 +164,24 @@ class Get:
                 uri.set_path(self.gcache)
                 uri.link(self.cache_paths.lists)
 
+                m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
+                if m:
+                    release_path = join(self.cache_paths.lists,
+                                        m.group(1)) + "_Release"
+                    release_content = file(release_path).read()
+
                 #skip download if local packages file is latest
-                if exists(uri.path):
-                    content = file(release.path).read()
-                    if re.search(md5sum(uri.path), content):
-                        continue
+                if exists(uri.path) and re.search(md5sum(uri.path), release_content):
+                    continue
 
                 unpack_path = join(self.gcache, uri.destfile)
                 uri.set_destfile(uri.destfile + ".bz2")
                 uri.set_path(self.gcache)
                 uri.get()
-                if not re.search(md5sum(uri.path), content):
+
+                if not re.search(md5sum(uri.path), release_content):
                     raise ChecksumError(uri.path,
-                                        "releases file: %s" % release.path,
+                                        "releases file: %s" % release_path,
                                         md5sum(uri.path))
 
                 executil.system("bzcat %s > %s" % (uri.path, unpack_path))
