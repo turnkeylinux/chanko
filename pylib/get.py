@@ -103,47 +103,47 @@ class Release:
         self.gcache = gcache
         self.lists = lists
 
+        self.gpg = None
         self.release = None
-        self.release_gpg = None
         self.repositories = []
 
     def update(self):
         self.release.get(self.gcache)
         self.release.link(self.lists)
 
-        self.release_gpg.get(self.gcache)
-        self.release_gpg.link(self.lists)
+        self.gpg.get(self.gcache)
+        self.gpg.link(self.lists)
 
         # will raise an error if verification fails
-        executil.getoutput("gpgv --keyring", 
-                           self.keyring,
-                           self.release_gpg.path, 
-                           self.release.path)
+        executil.getoutput("gpgv --keyring", self.keyring, self.gpg.path, self.release.path)
 
-        for uri in self.repositories:
-            uri.set_path(self.gcache)
-            uri.link(self.lists)
+        for repository in self.repositories:
+            self._update_repository(repository)
 
-            m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
-            if m:
-                release_path = join(self.lists, m.group(1)) + "_Release"
-                release_content = file(release_path).read()
+    def _update_repository(self, uri):
+        uri.set_path(self.gcache)
+        uri.link(self.lists)
 
-            #skip download if local packages file is latest
-            if exists(uri.path) and re.search(md5sum(uri.path), release_content):
-                continue
+        m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
+        if m:
+            release_path = join(self.lists, m.group(1)) + "_Release"
+            release_content = file(release_path).read()
 
-            unpack_path = join(self.gcache, uri.destfile)
-            uri.set_destfile(uri.destfile + ".bz2")
-            uri.set_path(self.gcache)
-            uri.get()
+        #skip download if local packages file is latest
+        if exists(uri.path) and re.search(md5sum(uri.path), release_content):
+            return
 
-            if not re.search(md5sum(uri.path), release_content):
-                raise ChecksumError(uri.path,
-                                    "releases file: %s" % release_path,
-                                    md5sum(uri.path))
+        unpack_path = join(self.gcache, uri.destfile)
+        uri.set_destfile(uri.destfile + ".bz2")
+        uri.set_path(self.gcache)
+        uri.get()
 
-            executil.system("bzcat %s > %s" % (uri.path, unpack_path))
+        if not re.search(md5sum(uri.path), release_content):
+            raise ChecksumError(uri.path,
+                                "releases file: %s" % release_path,
+                                md5sum(uri.path))
+
+        executil.system("bzcat %s > %s" % (uri.path, unpack_path))
 
 
 class Get:
@@ -211,7 +211,7 @@ class Get:
                 release.release = uri
 
             if uri.filename == "Release.gpg":
-                release.release_gpg = uri
+                release.gpg = uri
                 release.update()
 
     @staticmethod
