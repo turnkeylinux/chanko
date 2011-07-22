@@ -97,11 +97,54 @@ class Uri:
             os.symlink(self.path, dest)
 
 class Release:
-    def __init__(self, name):
+    def __init__(self, name, keyring, gcache, lists):
         self.name = name
+        self.keyring = keyring
+        self.gcache = gcache
+        self.lists = lists
+
         self.release = None
         self.release_gpg = None
         self.repositories = []
+
+    def update(self):
+        self.release.get(self.gcache)
+        self.release.link(self.lists)
+
+        self.release_gpg.get(self.gcache)
+        self.release_gpg.link(self.lists)
+
+        # will raise an error if verification fails
+        executil.getoutput("gpgv --keyring", 
+                           self.keyring,
+                           self.release_gpg.path, 
+                           self.release.path)
+
+        for uri in self.repositories:
+            uri.set_path(self.gcache)
+            uri.link(self.lists)
+
+            m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
+            if m:
+                release_path = join(self.lists, m.group(1)) + "_Release"
+                release_content = file(release_path).read()
+
+            #skip download if local packages file is latest
+            if exists(uri.path) and re.search(md5sum(uri.path), release_content):
+                continue
+
+            unpack_path = join(self.gcache, uri.destfile)
+            uri.set_destfile(uri.destfile + ".bz2")
+            uri.set_path(self.gcache)
+            uri.get()
+
+            if not re.search(md5sum(uri.path), release_content):
+                raise ChecksumError(uri.path,
+                                    "releases file: %s" % release_path,
+                                    md5sum(uri.path))
+
+            executil.system("bzcat %s > %s" % (uri.path, unpack_path))
+
 
 class Get:
     def __init__(self, cache_paths, chanko_paths, options, gcache):
@@ -145,18 +188,21 @@ class Get:
         return uris
 
     def update(self):
-        trustedkeys_path = self.chanko_paths.config.trustedkeys_gpg
-        if not exists(trustedkeys_path):
-            raise Error("trustedkeys keyring not found: %s" % trustedkeys_path)
+        keyring = self.chanko_paths.config.trustedkeys_gpg
+        if not exists(keyring):
+            raise Error("trustedkeys keyring not found: %s" % keyring)
 
         raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
-        releases = {}
+        releases = []
         for uri in uris:
-            if uri.release not in releases.keys():
-                release = Release(uri.release)
-                releases[release.name] = None
+            if uri.release not in releases:
+                releases.append(uri.release)
+                release = Release(uri.release,
+                                  keyring,
+                                  self.gcache,
+                                  self.cache_paths.lists)
    
             if uri.filename == "Packages.bz2":
                 release.repositories.append(uri)
@@ -166,46 +212,7 @@ class Get:
 
             if uri.filename == "Release.gpg":
                 release.release_gpg = uri
-                releases[release.name] = release
-
-        for release in releases.values():
-            release.release.get(self.gcache)
-            release.release.link(self.cache_paths.lists)
-
-            release.release_gpg.get(self.gcache)
-            release.release_gpg.link(self.cache_paths.lists)
-
-            # will raise an error if verification fails
-            executil.getoutput("gpgv --keyring", 
-                               trustedkeys_path, 
-                               release.release_gpg.path, 
-                               release.release.path)
-
-            for uri in release.repositories:
-                uri.set_path(self.gcache)
-                uri.link(self.cache_paths.lists)
-
-                m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
-                if m:
-                    release_path = join(self.cache_paths.lists,
-                                        m.group(1)) + "_Release"
-                    release_content = file(release_path).read()
-
-                #skip download if local packages file is latest
-                if exists(uri.path) and re.search(md5sum(uri.path), release_content):
-                    continue
-
-                unpack_path = join(self.gcache, uri.destfile)
-                uri.set_destfile(uri.destfile + ".bz2")
-                uri.set_path(self.gcache)
-                uri.get()
-
-                if not re.search(md5sum(uri.path), release_content):
-                    raise ChecksumError(uri.path,
-                                        "releases file: %s" % release_path,
-                                        md5sum(uri.path))
-
-                executil.system("bzcat %s > %s" % (uri.path, unpack_path))
+                release.update()
 
     @staticmethod
     def _fmt_bytes(bytes):
