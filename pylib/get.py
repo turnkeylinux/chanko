@@ -36,6 +36,7 @@ class Uri:
         self.filename = basename(url)
         self.destfile = None
         self.path = None
+        self.release = None
         self.checksum = None
         self.size = 0
 
@@ -95,6 +96,13 @@ class Uri:
         if not islink(dest):
             os.symlink(self.path, dest)
 
+class Release:
+    def __init__(self, name):
+        self.name = name
+        self.release = None
+        self.release_gpg = None
+        self.repositories = []
+
 class Get:
     def __init__(self, cache_paths, chanko_paths, options, gcache):
         self.cache_paths = cache_paths
@@ -115,6 +123,7 @@ class Get:
                 if not re.match("(.*)Translation(.*)", m.group(1)):
                     uri = Uri(m.group(1))
                     uri.destfile = m.group(2)
+                    uri.release = uri.destfile.split("_")[3]
 
                     uris.append(uri)
         return uris
@@ -143,24 +152,36 @@ class Get:
         raw = self._cmdget("update")
         uris = self._parse_update_uris(raw)
 
+        releases = {}
         for uri in uris:
-            if uri.filename == "Release":
-                release = uri
-            elif uri.filename == "Release.gpg":
-                release_gpg = uri
-
-        for uri in (release, release_gpg):
-            uri.get(self.gcache)
-            uri.link(self.cache_paths.lists)
-        
-        # will raise an error if verification fails
-        executil.getoutput("gpgv --keyring", 
-                           trustedkeys_path, 
-                           release_gpg.path, 
-                           release.path)
-
-        for uri in uris:
+            if uri.release not in releases.keys():
+                release = Release(uri.release)
+                releases[release.name] = None
+   
             if uri.filename == "Packages.bz2":
+                release.repositories.append(uri)
+
+            if uri.filename == "Release":
+                release.release = uri
+
+            if uri.filename == "Release.gpg":
+                release.release_gpg = uri
+                releases[release.name] = release
+
+        for release in releases.values():
+            release.release.get(self.gcache)
+            release.release.link(self.cache_paths.lists)
+
+            release.release_gpg.get(self.gcache)
+            release.release_gpg.link(self.cache_paths.lists)
+
+            # will raise an error if verification fails
+            executil.getoutput("gpgv --keyring", 
+                               trustedkeys_path, 
+                               release.release_gpg.path, 
+                               release.release.path)
+
+            for uri in release.repositories:
                 uri.set_path(self.gcache)
                 uri.link(self.cache_paths.lists)
 
