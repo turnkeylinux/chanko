@@ -254,7 +254,7 @@ class Get:
             else:
                 raise Error("cmdget returned error: ", e)
 
-            return False
+            return []
 
         uris = self._parse_install_uris(raw_uris)
         uris = self._remove_blacklisted(uris)
@@ -263,7 +263,7 @@ class Get:
     def install(self, packages, force):
         uris = self.get_install_uris(packages)
         if len(uris) == 0:
-            print "Archive(s) already in chanko"
+            print "Nothing to get..."
             return False
 
         size = 0
