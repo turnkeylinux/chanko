@@ -3,11 +3,6 @@ deb http://archive.ubuntu.com/ubuntu lucid main
 # deb http://archive.ubuntu.com/ubuntu lucid restricted
 # deb http://archive.ubuntu.com/ubuntu lucid multiverse
 
-# deb http://archive.ubuntu.com/ubuntu lucid-backports main
-# deb http://archive.ubuntu.com/ubuntu lucid-backports universe
-# deb http://archive.ubuntu.com/ubuntu lucid-backports restricted
-# deb http://archive.ubuntu.com/ubuntu lucid-backports multiverse
-
 # deb http://archive.ubuntu.com/ubuntu lucid-security main
 # deb http://archive.ubuntu.com/ubuntu lucid-security universe
 # deb http://archive.ubuntu.com/ubuntu lucid-security restricted
@@ -17,4 +12,9 @@ deb http://archive.ubuntu.com/ubuntu lucid main
 # deb http://archive.ubuntu.com/ubuntu lucid-updates universe
 # deb http://archive.ubuntu.com/ubuntu lucid-updates restricted
 # deb http://archive.ubuntu.com/ubuntu lucid-updates multiverse
+
+# deb http://archive.ubuntu.com/ubuntu lucid-backports main
+# deb http://archive.ubuntu.com/ubuntu lucid-backports universe
+# deb http://archive.ubuntu.com/ubuntu lucid-backports restricted
+# deb http://archive.ubuntu.com/ubuntu lucid-backports multiverse
 
