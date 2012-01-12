@@ -245,7 +245,16 @@ class Get:
 
         return cleaned_uris
 
-    def get_install_uris(self, packages):
+    def _remove_depends(self, packages, uris):
+        cleaned_uris = []
+        for uri in uris:
+            name, version = uri.filename.split("_")[:2]
+            if name in packages:
+                cleaned_uris.append(uri)
+
+        return cleaned_uris
+
+    def get_install_uris(self, packages, nodeps):
         try:
             raw_uris = self._cmdget("-y install %s" % " ".join(packages))
         except executil.ExecError, e:
@@ -258,10 +267,13 @@ class Get:
 
         uris = self._parse_install_uris(raw_uris)
         uris = self._remove_blacklisted(uris)
+        if nodeps:
+            uris = self._remove_depends(packages, uris)
+
         return uris
 
-    def install(self, packages, force):
-        uris = self.get_install_uris(packages)
+    def install(self, packages, force, nodeps):
+        uris = self.get_install_uris(packages, nodeps)
         if len(uris) == 0:
             print "Nothing to get..."
             return False

@@ -108,15 +108,15 @@ class Cache:
 
         return results
 
-    def get(self, packages, force=False, pretend=False):
+    def get(self, packages, force=False, pretend=False, nodeps=False):
         if self.cache_type is not 'remote':
             raise Error('can only get packages if cache is remote')
 
         get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
         if pretend:
-            return get.get_install_uris(packages)
+            return get.get_install_uris(packages, nodeps)
 
-        return get.install(packages, force)
+        return get.install(packages, force, nodeps)
 
     def refresh(self):
         if self.cache_type is 'remote':

@@ -8,7 +8,8 @@ Arguments:
 
 Options:
   -p --pretend   Displays which packages would be downloaded
-  -f --force     Dont ask for confirmation before downloading
+  -f --force     Do not ask for confirmation before downloading
+  -n --nodeps    Do not get package dependencies
 
 """
 
@@ -30,18 +31,21 @@ def display_uris(uris):
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp",
-                                       ['force', 'pretend'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fpn",
+                                       ['force', 'pretend', 'nodeps'])
     except getopt.GetoptError, e:
         usage(e)
 
     opt_force = False
     opt_pretend = False
+    opt_nodeps = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
             opt_force = True
         elif opt in ('-p', '--pretend'):
             opt_pretend = True
+        elif opt in ('-n', '--nodeps'):
+            opt_nodeps = True
 
     if len(args) == 0:
         usage("bad number of arguments")
@@ -64,10 +68,10 @@ def main():
 
     toget = promote_depends(chanko.remote_cache, packages)
     if opt_pretend:
-        uris = chanko.remote_cache.get(toget, pretend=True)
+        uris = chanko.remote_cache.get(toget, opt_force, opt_pretend, opt_nodeps)
         display_uris(uris)
 
-    elif chanko.remote_cache.get(toget, opt_force):
+    elif chanko.remote_cache.get(toget, opt_force, opt_pretend, opt_nodeps):
         chanko.local_cache.refresh()
         chanko.log.update(packages)
 
