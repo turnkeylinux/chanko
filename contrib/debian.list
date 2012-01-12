@@ -1,0 +1,4 @@
+deb http://ftp.debian.org/debian lenny main
+# deb http://ftp.debian.org/debian lenny contrib
+# deb http://ftp.debian.org/debian lenny non-free
+
