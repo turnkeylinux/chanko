@@ -10,8 +10,8 @@ Arguments:
 If sources.list and trustedkeys.gpg are specified, they will be used and chanko
 will be refreshed post initialization.
 
-If --dummy is specified, an exemplary sources.list with matching trustedkeys.gpg
-will be created.
+If --dummy-<dist> is specified, an exemplary sources.list with matching 
+trustedkeys.gpg will be created. (eg. --dummy-ubuntu, --dummy-debian)
 
 """
 import sys
@@ -22,9 +22,9 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s <sources.list> <trustedkeys.gpg> | --dummy" % sys.argv[0]
+    print >> sys.stderr, "Syntax: %s <sources.list> <trustedkeys.gpg> | --dummy-<dist>" % sys.argv[0]
 
-def get_dummy_files():
+def get_dummy_files(prefix):
     def f(file):
         INSTALL_PATH = dirname(dirname(__file__))
         paths = (join(INSTALL_PATH, 'contrib', file),
@@ -34,17 +34,18 @@ def get_dummy_files():
             if exists(path):
                 return path
 
-        usage('could not find \'%s\' in: ' + paths)
+        usage('could not find dummy file: ' + str(paths))
 
     ret = []
-    for file in ('sources.list', 'trustedkeys.gpg'):
+    for file in (prefix + '.list', prefix + '.gpg'):
         ret.append(f(file))
 
     return ret
 
 def main():
-    if len(sys.argv) == 2 and sys.argv[1] == "--dummy":
-        sourceslist, trustedkeys = get_dummy_files()
+    if len(sys.argv) == 2 and sys.argv[1].startswith("--dummy-"):
+        prefix = sys.argv[1].replace('--dummy-', '')
+        sourceslist, trustedkeys = get_dummy_files(prefix)
         refresh = False
 
     elif len(sys.argv) == 3:
