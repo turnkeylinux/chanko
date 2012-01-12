@@ -5,7 +5,6 @@ Upgrade chanko archives according to log
 Options:
   -p --purge     Purge superceded archives
   -f --force     Dont ask for confirmation before downloading and purging
-  -n --no-deps   Do not get package dependencies
 
 """
 
@@ -24,34 +23,40 @@ def usage():
     
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fpn", 
-                                       ['force', 'purge', 'no-deps'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp", ['force', 'purge'])
     except getopt.GetoptError, e:
         usage(e)
 
     opt_force = False
     opt_purge = False
-    opt_nodeps = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
             opt_force = True
         elif opt in ('-p', '--purge'):
             opt_purge = True
-        elif opt in ('-n', '--no-deps'):
-            opt_nodeps = True
 
     chanko = Chanko()
 
     chanko.remote_cache.refresh()
     chanko.local_cache.refresh()
 
-    toget = promote_depends(chanko.remote_cache, chanko.log.list())
-    if chanko.remote_cache.get(toget, opt_force, nodeps=opt_nodeps):
+    upgraded = False
+    packages = chanko.log.list()
+
+    for metadata in packages:
+        opt_nodeps = False
+        if metadata == '--no-deps':
+            opt_nodeps = True
+
+        toget = promote_depends(chanko.remote_cache, packages[metadata])
+        if chanko.remote_cache.get(toget, opt_force, nodeps=opt_nodeps):
+            upgraded = True
+
+    if upgraded:
         if opt_purge:
             purge(chanko.paths.archives, opt_force)
 
         chanko.local_cache.refresh()
-
 
 if __name__ == "__main__":
     main()

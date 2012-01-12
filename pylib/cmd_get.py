@@ -73,7 +73,11 @@ def main():
 
     elif chanko.remote_cache.get(toget, opt_force, opt_pretend, opt_nodeps):
         chanko.local_cache.refresh()
-        chanko.log.update(packages)
+
+        metadata = ""
+        if opt_nodeps:
+            metadata = "--no-deps"
+        chanko.log.update(packages, metadata)
 
 
 if __name__ == "__main__":

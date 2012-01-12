@@ -32,22 +32,26 @@ class Log:
         if not exists(self.path):
             mkdir(self.path)
 
-    def update(self, pkgnames):
+    def update(self, pkgnames, metadata=""):
         for pkgname in pkgnames:
             pkgpath = join(self.path, pkgname)
             if not exists(pkgpath):
-                file(pkgpath, "w").write("")
+                file(pkgpath, "w").write(metadata)
 
     def list(self):
-        pkgnames = []
+        packages = {}
         for pkgname in os.listdir(self.path):
             pkgpath = join(self.path, pkgname)
-            if not isfile(join(self.path, pkgname)):
+            if not isfile(pkgpath):
                 continue
 
-            pkgnames.append(pkgname)
+            metadata = file(pkgpath).read().strip()
+            if not packages.has_key(metadata):
+                packages[metadata] = []
 
-        return pkgnames
+            packages[metadata].append(pkgname)
+
+        return packages
 
 class ChankoPaths(Paths):
     def __init__(self, path=None):
