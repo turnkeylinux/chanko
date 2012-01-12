@@ -83,3 +83,14 @@ def promote_depends(remote_cache, packages):
 
     return toget
 
+def in_arena():
+    """boolean whether in sumo area"""
+    path = os.getenv('CHANKO_BASE', os.getcwd())
+    dir = os.path.realpath(path)
+    while dir is not '/':
+        if os.path.basename(dir) == "arena.union":
+            return True
+
+        dir, subdir = os.path.split(dir)
+
+    return False

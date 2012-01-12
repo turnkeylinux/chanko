@@ -55,9 +55,6 @@ class ChankoPaths(Paths):
             path = os.getenv('CHANKO_BASE', os.getcwd())
 
         self.base = realpath(path)
-        if not self._is_arena(self.base):
-            raise Error("not inside a sumo arena")
-
         os.environ['CHANKO_BASE'] = path
 
         Paths.__init__(self, self.base, ['config', 'archives', 'log'])
@@ -67,17 +64,6 @@ class ChankoPaths(Paths):
                                           'blacklist',
                                           'trustedkeys.gpg',
                                           'arch'])
-
-    @staticmethod
-    def _is_arena(path):
-        dir = realpath(path)
-        while dir is not '/':
-            if basename(dir) == "arena.union":
-                return True
-
-            dir, subdir = split(dir)
-
-        return False
 
 class Chanko:
     """ class for creating and controlling a chanko """
@@ -121,7 +107,7 @@ class Chanko:
 
         for path in (self.paths.config, self.paths.archives):
             if not exists(str(path)):
-                raise Error("does not exist", path)
+                raise Error("chanko path not found: ", path)
 
         mkdir(join(self.paths.archives, "partial"))
         cache_id = file(self.paths.config.cache_id).read().strip()

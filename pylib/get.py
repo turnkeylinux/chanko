@@ -4,7 +4,7 @@ from os.path import *
 
 import executil
 
-from common import mkdir, md5sum, sha256sum, parse_inputfile
+from common import mkdir, md5sum, sha256sum, parse_inputfile, in_arena
 
 class Error(Exception):
     pass
@@ -69,7 +69,7 @@ class Uri:
 
         print "* get: " + basename(self.path)
         mkdir(dirname(self.path))
-        if self.path.endswith('.deb'):
+        if in_arena() and self.path.endswith('.deb'):
             self._sumocmd("get %s %s" % (self.url, self.path))
         else:
             executil.system("curl -L -f %s -o %s" % (self.url, self.path))
