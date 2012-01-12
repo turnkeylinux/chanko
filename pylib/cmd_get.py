@@ -9,7 +9,7 @@ Arguments:
 Options:
   -p --pretend   Displays which packages would be downloaded
   -f --force     Do not ask for confirmation before downloading
-  -n --nodeps    Do not get package dependencies
+  -n --no-deps   Do not get package dependencies
 
 """
 
@@ -32,7 +32,7 @@ def display_uris(uris):
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], ":fpn",
-                                       ['force', 'pretend', 'nodeps'])
+                                       ['force', 'pretend', 'no-deps'])
     except getopt.GetoptError, e:
         usage(e)
 
@@ -44,7 +44,7 @@ def main():
             opt_force = True
         elif opt in ('-p', '--pretend'):
             opt_pretend = True
-        elif opt in ('-n', '--nodeps'):
+        elif opt in ('-n', '--no-deps'):
             opt_nodeps = True
 
     if len(args) == 0:

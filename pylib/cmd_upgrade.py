@@ -5,7 +5,7 @@ Upgrade chanko archives according to log
 Options:
   -p --purge     Purge superceded archives
   -f --force     Dont ask for confirmation before downloading and purging
-  -n --nodeps    Do not get package dependencies
+  -n --no-deps   Do not get package dependencies
 
 """
 
@@ -25,7 +25,7 @@ def usage():
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], ":fpn", 
-                                       ['force', 'purge', 'nodeps'])
+                                       ['force', 'purge', 'no-deps'])
     except getopt.GetoptError, e:
         usage(e)
 
@@ -37,7 +37,7 @@ def main():
             opt_force = True
         elif opt in ('-p', '--purge'):
             opt_purge = True
-        elif opt in ('-n', '--nodeps'):
+        elif opt in ('-n', '--no-deps'):
             opt_nodeps = True
 
     chanko = Chanko()
