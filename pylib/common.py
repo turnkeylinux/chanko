@@ -14,9 +14,13 @@ def mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def sha256sum(path):
+def calc_digest(path, len):
+    if len == 32:
+        return md5sum(path)
+
+    sha_digest = {40: hashlib.sha1, 64: hashlib.sha256}
     if os.path.exists(path):
-        return hashlib.sha256(file(path, 'rb').read()).hexdigest()
+        return sha_digest[len](file(path, 'rb').read()).hexdigest()
 
     return False
 
