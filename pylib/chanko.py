@@ -2,9 +2,9 @@
 
 import os
 import re
-import md5
 import time
 import shutil
+from hashlib import md5
 from os.path import *
 
 from paths import Paths
@@ -76,7 +76,7 @@ class Chanko:
     def _new_cache_id(s):
         """calculates a guaranteed unique new cache_id"""
         def digest(s):
-            return md5.md5(s).hexdigest()
+            return md5(s).hexdigest()
 
         return digest(s + `time.time()`)
 

@@ -1,7 +1,6 @@
 
 import re
 import os
-import md5
 import hashlib
 
 import debinfo
@@ -26,7 +25,7 @@ def calc_digest(path, len):
 
 def md5sum(path):
     if os.path.exists(path):
-        return md5.md5(file(path, 'rb').read()).hexdigest()
+        return hashlib.md5(file(path, 'rb').read()).hexdigest()
 
     return False
 
