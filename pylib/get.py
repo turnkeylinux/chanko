@@ -160,7 +160,9 @@ class Get:
                 if not re.match("(.*)Translation(.*)", m.group(1)):
                     uri = Uri(m.group(1))
                     uri.destfile = m.group(2)
-                    uri.release = uri.destfile.split("_")[3]
+                    m = re.match("(.*)_dists_(.*)_(.*)", uri.destfile)
+                    if m:
+                        uri.release = m.group(2)
 
                     uris.append(uri)
         return uris
