@@ -156,15 +156,27 @@ class Get:
         uris = []
         for uri in raw.split("\n"):
             m = re.match("\'(.*)\' (.*) 0", uri)
-            if m:
-                if not re.match("(.*)Translation(.*)", m.group(1)):
-                    uri = Uri(m.group(1))
-                    uri.destfile = m.group(2)
-                    m = re.match("(.*)_dists_(.*)_(.*)", uri.destfile)
-                    if m:
-                        uri.release = m.group(2)
+            if not m:
+                continue
 
-                    uris.append(uri)
+            if re.match("(.*)Translation(.*)", m.group(1)):
+                continue
+
+            uri = Uri(m.group(1))
+            uri.destfile = m.group(2)
+
+            m = re.match("(.*)_dists_(.*)_(.*)", uri.destfile)
+            if m.group(3) in ('Release', 'Release.gpg'):
+                uri.release = m.group(2)
+
+            if m.group(3) in ('Packages'):
+                s = m.group(2).split("_")
+                s.pop()
+                s.pop()
+                uri.release = "_".join(s)
+
+            uris.append(uri)
+
         return uris
 
     @staticmethod
