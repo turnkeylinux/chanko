@@ -29,11 +29,14 @@ class State:
 
 class CacheOptions:
     def __init__(self, chanko_paths, cache, state):
+        self.arch = file(chanko_paths.config.arch).read().strip()
+
         generic = {'Dir':                  chanko_paths,
                    'Dir::Etc':             chanko_paths.config,
                    'Dir::Cache::Archives': chanko_paths.archives,
                    'Dir::State':           state.apt,
-                   'Dir::State::status':   state.dpkg.status
+                   'Dir::State::status':   state.dpkg.status,
+                   'APT::Architecture':    self.arch,
                   }
         
         remote =  {'Dir::Cache':           cache.remote,
@@ -87,17 +90,15 @@ class Cache:
         state = State(join(homedir, 'state'))
 
         _options = CacheOptions(chanko_paths, cachepaths, state.paths)
-        options = {'remote': _options.remote,
-                   'local':  _options.local}
+        options = {'remote': _options.remote, 'local':  _options.local}
 
         self.options = options[self.cache_type]
 
         sourceslist = "deb file:/// local debs"
         file(cachepaths.local.sources_list, "w").write(sourceslist)
 
-        # reminder: arch
-        self.local_pkgcache = join(self.paths.lists,
-                                   "_dists_local_debs_binary-i386_Packages")
+        arch_packages = "_dists_local_debs_binary-%s_Packages" % _options.arch
+        self.local_pkgcache = join(self.paths.lists, arch_packages)
 
     def _cmdcache(self, opts, sort=False):
         results = executil.getoutput("apt-cache %s %s" % (self.options, opts))
