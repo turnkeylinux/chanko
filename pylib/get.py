@@ -61,7 +61,7 @@ class Uri:
         print "* get: " + basename(self.path)
         mkdir(dirname(self.path))
         if self.path.endswith('.deb'):
-            executil.system("ccurl", self.url, self.path))
+            executil.system("ccurl", self.url, self.path)
         else:
             executil.system("curl -L -f %s -o %s" % (self.url, self.path))
 
@@ -76,16 +76,10 @@ class Uri:
         if not self.checksum == checksum:
             raise ChecksumError(self.path, self.checksum, checksum)
 
-    def link(self, link_path):
-        dest = join(link_path, self.destfile)
-        if not islink(dest):
-            os.symlink(self.path, dest)
-
 class Release:
-    def __init__(self, name, keyring, gcache, lists):
+    def __init__(self, name, keyring, lists):
         self.name = name
         self.keyring = keyring
-        self.gcache = gcache
         self.lists = lists
 
         self.gpg = None
@@ -93,11 +87,8 @@ class Release:
         self.repositories = []
 
     def update(self):
-        self.release.get(self.gcache)
-        self.release.link(self.lists)
-
-        self.gpg.get(self.gcache)
-        self.gpg.link(self.lists)
+        self.release.get(self.lists)
+        self.gpg.get(self.lists)
 
         # will raise an error if verification fails
         executil.getoutput("gpgv --keyring", self.keyring, self.gpg.path, self.release.path)
@@ -106,8 +97,7 @@ class Release:
             self._update_repository(repository)
 
     def _update_repository(self, uri):
-        uri.set_path(self.gcache)
-        uri.link(self.lists)
+        uri.set_path(self.lists)
 
         m = re.match("(.*)_(.*)_(.*)_Packages", uri.destfile)
         if m:
@@ -118,9 +108,9 @@ class Release:
         if exists(uri.path) and re.search(md5sum(uri.path), release_content):
             return
 
-        unpack_path = join(self.gcache, uri.destfile)
+        unpack_path = join(self.lists, uri.destfile)
         uri.set_destfile(uri.destfile + ".bz2")
-        uri.set_path(self.gcache)
+        uri.set_path(self.lists)
         uri.get()
 
         if not re.search(md5sum(uri.path), release_content):
@@ -132,11 +122,10 @@ class Release:
 
 
 class Get:
-    def __init__(self, cache_paths, chanko_paths, options, gcache):
+    def __init__(self, cache_paths, chanko_paths, options):
         self.cache_paths = cache_paths
         self.chanko_paths = chanko_paths
         self.options = options
-        self.gcache = gcache
 
     def _cmdget(self, opts):
         cmd = "apt-get %s --print-uris %s" % (self.options, opts)
@@ -198,10 +187,7 @@ class Get:
         for uri in uris:
             if uri.release not in releases:
                 releases.append(uri.release)
-                release = Release(uri.release,
-                                  keyring,
-                                  self.gcache,
-                                  self.cache_paths.lists)
+                release = Release(uri.release, keyring, self.cache_paths.lists)
    
             if uri.filename == "Packages.bz2":
                 release.repositories.append(uri)

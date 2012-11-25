@@ -1,9 +1,6 @@
 # Copyright (c) 2010 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
 
 import os
-import re
-import time
-import shutil
 from hashlib import md5
 from os.path import *
 
@@ -59,60 +56,23 @@ class ChankoPaths(Paths):
         Paths.__init__(self, self.base, ['config', 'archives', 'log'])
         self.config = Paths(self.config, ['sources.list',
                                           'sources.list.md5',
-                                          'cache_id',
                                           'blacklist',
                                           'trustedkeys.gpg',
                                           'arch'])
 
 class Chanko:
-    """ class for creating and controlling a chanko """
-
-    @staticmethod
-    def _new_cache_id(s):
-        """calculates a guaranteed unique new cache_id"""
-        def digest(s):
-            return md5(s).hexdigest()
-
-        return digest(s + `time.time()`)
-
-    @classmethod
-    def init_create(cls, sourceslist, trustedkeys):
-        """ create the chanko on the filesystem """
-        paths = ChankoPaths(os.getcwd())
-
-        for path in (sourceslist, trustedkeys):
-            if not exists(path):
-                raise Error("does not exist: %s" % path)
-
-        for path in (paths.config, paths.archives, paths.log):
-            if exists(str(path)):
-                raise Error("already exists", path)
-
-        mkdir(paths.config)
-        mkdir(join(paths.archives, "partial"))
-        Log(paths.log) # initialize log
-
-        shutil.copyfile(sourceslist, paths.config.sources_list)
-        shutil.copyfile(trustedkeys, paths.config.trustedkeys_gpg)
-
-        checksum = md5sum(paths.config.sources_list)
-        file(paths.config.sources_list_md5, "w").write(checksum)
-
-        cache_id = cls._new_cache_id(paths.base)
-        file(paths.config.cache_id, "w").write(cache_id)
+    """ class for controlling a chanko """
 
     def __init__(self):
         self.paths = ChankoPaths(os.getcwd())
 
-        for path in (self.paths.config, self.paths.archives):
-            if not exists(str(path)):
-                raise Error("chanko path not found: ", path)
+        for f in (self.paths.config.sources_list, self.paths.config.trustedkeys_gpg):
+            if not exists(f):
+                raise Error("chanko path not found: ", f)
 
         mkdir(join(self.paths.archives, "partial"))
-        cache_id = file(self.paths.config.cache_id).read().strip()
-
-        self.remote_cache = Cache('remote', cache_id, self.paths)
-        self.local_cache = Cache('local', cache_id, self.paths)
+        self.remote_cache = Cache('remote', self.paths)
+        self.local_cache = Cache('local', self.paths)
         self.log = Log(self.paths.log)
 
         self.remote_cache_auto_refreshed = False

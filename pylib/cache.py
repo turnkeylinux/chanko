@@ -71,23 +71,18 @@ class CachePaths(Paths):
 class Cache:
     """ class for controlling chanko cache """
 
-    def __init__(self, cache_type, cache_id, chanko_paths):
-        homedir = os.environ.get("CHANKO_HOME",
-                                 join(os.environ.get("HOME"), ".chanko"))
+    def __init__(self, cache_type, chanko_paths):
+        internal = join(os.getcwd(), ".internal")
 
-        cachepaths = CachePaths(join(homedir, 'caches', cache_id))
+        cachepaths = CachePaths(internal)
         mkdir(join(cachepaths.local.lists, 'partial'))
         mkdir(join(cachepaths.remote.lists,'partial'))
-        paths = {'remote': cachepaths.remote,
-                 'local':  cachepaths.local}
+        paths = {'remote': cachepaths.remote, 'local':  cachepaths.local}
         self.cache_type = cache_type
         self.paths = paths[self.cache_type]
 
-        self.gcache = join(homedir, 'caches', 'global')
-        mkdir(self.gcache)
-
         self.chanko_paths = chanko_paths
-        state = State(join(homedir, 'state'))
+        state = State(join(internal, 'state'))
 
         _options = CacheOptions(chanko_paths, cachepaths, state.paths)
         options = {'remote': _options.remote, 'local':  _options.local}
@@ -113,7 +108,7 @@ class Cache:
         if self.cache_type is not 'remote':
             raise Error('can only get packages if cache is remote')
 
-        get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
+        get = Get(self.paths, self.chanko_paths, self.options)
         if pretend:
             return get.get_install_uris(packages, nodeps)
 
@@ -122,7 +117,7 @@ class Cache:
     def refresh(self):
         if self.cache_type is 'remote':
             print "Refreshing remote cache..."
-            get = Get(self.paths, self.chanko_paths, self.options, self.gcache)
+            get = Get(self.paths, self.chanko_paths, self.options)
             get.update()
         else:
             print "Refreshing local cache..."
