@@ -1,7 +1,6 @@
 # Copyright (c) 2010 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
 
 import os
-from hashlib import md5
 from os.path import *
 
 from paths import Paths
@@ -55,7 +54,6 @@ class ChankoPaths(Paths):
         self.base = realpath(path)
         Paths.__init__(self, self.base, ['config', 'archives', 'log'])
         self.config = Paths(self.config, ['sources.list',
-                                          'sources.list.md5',
                                           'blacklist',
                                           'trustedkeys.gpg',
                                           'arch'])
@@ -74,19 +72,4 @@ class Chanko:
         self.remote_cache = Cache('remote', self.paths)
         self.local_cache = Cache('local', self.paths)
         self.log = Log(self.paths.log)
-
-        self.remote_cache_auto_refreshed = False
-        self._sources_list_updated()
-
-    def _sources_list_updated(self):
-        current_checksum = md5sum(self.paths.config.sources_list)
-        if exists(self.paths.config.sources_list_md5):
-            expected_checksum = file(self.paths.config.sources_list_md5).read().strip()
-        else:
-            expected_checksum = ""
-
-        if current_checksum != expected_checksum:
-            self.remote_cache.refresh()
-            self.remote_cache_auto_refreshed = True
-            file(self.paths.config.sources_list_md5, "w").write(current_checksum)
 
