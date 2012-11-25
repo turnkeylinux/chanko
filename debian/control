@@ -8,5 +8,4 @@ Standards-Version: 3.6.1
 Package: chanko
 Architecture: any
 Depends: pyproject-common, pool, curl, bzip2, gpgv
-Recommends: sumo
-Description: efficiently get packages from public sources, optionally shared via sumo
+Description: efficiently get packages from public sources

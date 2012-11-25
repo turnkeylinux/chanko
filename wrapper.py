@@ -3,7 +3,6 @@
 """
 Configuration environment variables:
     CHANKO_HOME    Location of caches storage (default: $HOME/.chanko)
-    CHANKO_BASE    Location of sumo arena (defaults to cwd)
 """
 
 from os.path import *

@@ -56,8 +56,6 @@ class Log:
 class ChankoPaths(Paths):
     def __init__(self, path):
         self.base = realpath(path)
-        os.environ['CHANKO_BASE'] = path
-
         Paths.__init__(self, self.base, ['config', 'archives', 'log'])
         self.config = Paths(self.config, ['sources.list',
                                           'sources.list.md5',
@@ -80,9 +78,7 @@ class Chanko:
     @classmethod
     def init_create(cls, sourceslist, trustedkeys):
         """ create the chanko on the filesystem """
-
-        chanko_base = os.getenv('CHANKO_BASE', os.getcwd())
-        paths = ChankoPaths(chanko_base)
+        paths = ChankoPaths(os.getcwd())
 
         for path in (sourceslist, trustedkeys):
             if not exists(path):
@@ -106,9 +102,7 @@ class Chanko:
         file(paths.config.cache_id, "w").write(cache_id)
 
     def __init__(self):
-
-        chanko_base = os.getenv('CHANKO_BASE', os.getcwd())
-        self.paths = ChankoPaths(chanko_base)
+        self.paths = ChankoPaths(os.getcwd())
 
         for path in (self.paths.config, self.paths.archives):
             if not exists(str(path)):

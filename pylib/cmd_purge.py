@@ -18,7 +18,6 @@ import executil
 
 import help
 from chanko import Chanko
-from common import in_arena
 
 @help.usage(__doc__)
 def usage():
@@ -61,10 +60,7 @@ def purge(path, force):
 
     print "Deleting..."
     for candidate in candidates:
-        if in_arena():
-            executil.system('sumo-rm %s' % candidate)
-        else:
-            os.remove(candidate)
+        os.remove(candidate)
 
     return True
 

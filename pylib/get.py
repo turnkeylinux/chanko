@@ -4,7 +4,7 @@ from os.path import *
 
 import executil
 
-from common import mkdir, md5sum, calc_digest, parse_inputfile, in_arena
+from common import mkdir, md5sum, calc_digest, parse_inputfile
 
 class Error(Exception):
     pass
@@ -40,15 +40,6 @@ class Uri:
         self.checksum = None
         self.size = 0
 
-    @staticmethod
-    def _sumocmd(opts):
-        # CHANKO_BASE _should be_ equivalent to SUMO_BASE
-        # currently we have to chdir into SUMO_BASE, setting env doesn't work
-        cwd = os.getcwd()
-        os.chdir(os.getenv('CHANKO_BASE', cwd))
-        executil.system("sumo-" + opts)
-        os.chdir(cwd)
-
     def set_destfile(self, destfile):
         self.destfile = destfile
 
@@ -69,10 +60,7 @@ class Uri:
 
         print "* get: " + basename(self.path)
         mkdir(dirname(self.path))
-        if in_arena() and self.path.endswith('.deb'):
-            self._sumocmd("get %s %s" % (self.url, self.path))
-        else:
-            executil.system("curl -L -f %s -o %s" % (self.url, self.path))
+        executil.system("curl -L -f %s -o %s" % (self.url, self.path))
 
     def checksum_verify(self):
         if not self.path:
