@@ -60,7 +60,10 @@ class Uri:
 
         print "* get: " + basename(self.path)
         mkdir(dirname(self.path))
-        executil.system("curl -L -f %s -o %s" % (self.url, self.path))
+        if self.path.endswith('.deb'):
+            executil.system("ccurl", self.url, self.path))
+        else:
+            executil.system("curl -L -f %s -o %s" % (self.url, self.path))
 
     def checksum_verify(self):
         if not self.path:
