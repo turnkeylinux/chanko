@@ -1,31 +1,31 @@
-from os.path import *
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 
-from common import mkdir
-
-class Error(Exception):
-    pass
+import os
+from utils import makedirs
 
 class Log:
     def __init__(self, path):
         self.path = str(path)
-
-        if isfile(self.path):
-            raise Error('incompatible log file, please remove: %s' % self.path)
-
-        if not exists(self.path):
-            mkdir(self.path)
+        makedirs(self.path)
 
     def update(self, pkgnames, metadata=""):
         for pkgname in pkgnames:
-            pkgpath = join(self.path, pkgname)
-            if not exists(pkgpath):
+            pkgpath = os.path.join(self.path, pkgname)
+            if not os.path.exists(pkgpath):
                 file(pkgpath, "w").write(metadata)
 
     def list(self):
         packages = {}
         for pkgname in os.listdir(self.path):
-            pkgpath = join(self.path, pkgname)
-            if not isfile(pkgpath):
+            pkgpath = os.path.join(self.path, pkgname)
+            if not os.path.isfile(pkgpath):
                 continue
 
             metadata = file(pkgpath).read().strip()

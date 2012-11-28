@@ -1,5 +1,12 @@
 #!/usr/bin/python
-# Copyright (c) 2010 Alon Swartz - all rights reserved
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 """
 Query chanko
 
@@ -21,7 +28,6 @@ Options:
 
 import sys
 import getopt
-from os.path import *
 
 import help
 from chanko import Chanko
@@ -40,15 +46,14 @@ def main():
         usage(e)
 
     kws={}
-    remote = False
-    local = False
+    cache_type = None
     for opt, val in opts:
         if opt in ('--info', '--names', '--stats'):
             kws[opt[2:]] = True
         elif opt in ('-r', '--remote'):
-            remote = True
+            cache_type = 'remote'
         elif opt in ('-l', '--local'):
-            local = True
+            cache_type = 'local'
         else:
             kws[opt[2:]] = val
 
@@ -61,21 +66,19 @@ def main():
     else:
         usage("bad number of arguments (package_glob)")
 
-    if remote == local:
-        usage("either remote/local or local must be specified")
+    if not cache_type:
+        usage("--remote or --local is required")
 
     chanko = Chanko()
-    if remote:
-        pkgcache = join(str(chanko.remote_cache.paths), 'pkgcache.bin')
-        if not exists(pkgcache):
-            chanko.remote_cache.refresh()
+    cache = getattr(chanko, cache_type + "_cache")
+    results = cache.query(package, **kws)
 
-        results = chanko.remote_cache.query(package, **kws)
-
-    if local:
-        results = chanko.local_cache.query(package, **kws)
-
-    print results
+    if results == None:
+        print "%s cache is empty" % cache_type.capitalize()
+    elif results == "":
+        print "No matches found"
+    else:
+        print results
 
 
 if __name__ == "__main__":

@@ -1,102 +1,66 @@
-# Copyright (c) 2010 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 
 import os
 import re
-from os.path import *
 
 import executil
-from paths import Paths
 
-from common import mkdir
-from get import Get
+import releases
+from utils import makedirs
 
 class Error(Exception):
     pass
 
-class StatePaths(Paths):
-    def __init__(self, path):
-        Paths.__init__(self, path, ['apt', 'dpkg'])
-        
-        self.dpkg = Paths(self.dpkg, ['status'])
+class Cache(object):
+    def __init__(self, chanko, type):
+        self.chanko = chanko
+        self.type = type
 
-class State:
-    def __init__(self, path):
-        self.paths = StatePaths(path)
-            
-        mkdir(self.paths.apt)
-        mkdir(self.paths.dpkg)
-        file(self.paths.dpkg.status, "w").write("")
+        self.base = os.path.join(self.chanko.base, '.internal')
+        self.cache = os.path.join(self.base, self.type)
+        self.cache_lists = os.path.join(self.cache, 'lists')
+        makedirs(self.cache_lists)
 
-class CacheOptions:
-    def __init__(self, chanko_paths, cache, state):
-        self.arch = file(chanko_paths.config.arch).read().strip()
+        self.state = os.path.join(self.base, 'state')
+        self.state_apt = os.path.join(self.state, 'apt')
+        self.state_dpkg = os.path.join(self.state, 'dpkg')
+        self.state_dpkg_status = os.path.join(self.state_dpkg, 'status')
+        makedirs(self.state_apt)
+        makedirs(self.state_dpkg)
+        file(os.path.join(self.state_dpkg_status), 'w').write('')
 
-        generic = {'Dir':                  chanko_paths,
-                   'Dir::Etc':             chanko_paths.config,
-                   'Dir::Cache::Archives': chanko_paths.archives,
-                   'Dir::State':           state.apt,
-                   'Dir::State::status':   state.dpkg.status,
-                   'APT::Architecture':    self.arch,
-                  }
-        
-        remote =  {'Dir::Cache':           cache.remote,
-                   'Dir::State::Lists':    cache.remote.lists,
-                   'Dir::Etc::SourceList': chanko_paths.config.sources_list
-                  }
+    @property
+    def options(self):
+        d = { 'Dir': self.chanko.base,
+              'Dir::Etc': self.chanko.config,
+              'Dir::Etc::SourceList': self.sources_list,
+              'Dir::Cache': self.cache,
+              'Dir::Cache::Archives': self.chanko.archives,
+              'Dir::State': self.state_apt,
+              'Dir::State::Lists': self.cache_lists,
+              'Dir::State::status': self.state_dpkg_status,
+              'APT::Architecture': self.chanko.architecture }
 
-        local =   {'Dir::Cache':           cache.local,
-                   'Dir::State::Lists':    cache.local.lists,
-                   'Dir::Etc::SourceList': cache.local.sources_list
-                  }
+        return " ".join(map(lambda x: "-o %s=%s" % (x[0], x[1]), d.items()))
 
-        generic_opts = self._generate_opts(generic)
-        self.remote = generic_opts + self._generate_opts(remote)
-        self.local  = generic_opts + self._generate_opts(local)
+    @property
+    def has_lists(self):
+        for list in os.listdir(self.cache_lists):
+            list_path = os.path.join(self.cache_lists, list)
+            if list_path.endswith("Packages") and os.path.getsize(list_path) > 0:
+                return True
 
-    @staticmethod
-    def _generate_opts(dict):
-        opts = ""
-        for opt in dict.keys():
-            opts = opts + "-o %s=%s " % (opt, dict[opt])
-        
-        return opts
-                  
-class CachePaths(Paths):
-    def __init__(self, path):
-        Paths.__init__(self, path, ['local', 'remote'])
-        
-        self.local  = Paths(self.local,  ['lists', 'sources.list', 'dbcache'])
-        self.remote = Paths(self.remote, ['lists'])
+        return False
 
-class Cache:
-    """ class for controlling chanko cache """
-
-    def __init__(self, cache_type, chanko_paths):
-        internal = join(os.getcwd(), ".internal")
-
-        cachepaths = CachePaths(internal)
-        mkdir(join(cachepaths.local.lists, 'partial'))
-        mkdir(join(cachepaths.remote.lists,'partial'))
-        paths = {'remote': cachepaths.remote, 'local':  cachepaths.local}
-        self.cache_type = cache_type
-        self.paths = paths[self.cache_type]
-
-        self.chanko_paths = chanko_paths
-        state = State(join(internal, 'state'))
-
-        _options = CacheOptions(chanko_paths, cachepaths, state.paths)
-        options = {'remote': _options.remote, 'local':  _options.local}
-
-        self.options = options[self.cache_type]
-
-        sourceslist = "deb file:/// local debs"
-        file(cachepaths.local.sources_list, "w").write(sourceslist)
-
-        arch_packages = "_dists_local_debs_binary-%s_Packages" % _options.arch
-        self.local_pkgcache = join(self.paths.lists, arch_packages)
-
-    def _cmdcache(self, opts, sort=False):
-        results = executil.getoutput("apt-cache %s %s" % (self.options, opts))
+    def _cmdcache(self, arg, sort=False):
+        results = executil.getoutput("apt-cache %s %s" % (self.options, arg))
         if sort:
             results = results.splitlines()
             results.sort()
@@ -104,65 +68,74 @@ class Cache:
 
         return results
 
-    def get(self, packages, force=False, pretend=False, nodeps=False):
-        if self.cache_type is not 'remote':
-            raise Error('can only get packages if cache is remote')
-
-        get = Get(self.paths, self.chanko_paths, self.options)
-        if pretend:
-            return get.get_install_uris(packages, nodeps)
-
-        return get.install(packages, force, nodeps)
-
-    def refresh(self):
-        if self.cache_type is 'remote':
-            print "Refreshing remote cache..."
-            get = Get(self.paths, self.chanko_paths, self.options)
-            get.update()
-        else:
-            print "Refreshing local cache..."
-            executil.system("apt-ftparchive packages --db=%s %s > %s" %
-                            (self.paths.dbcache,
-                             self.chanko_paths.archives,
-                             self.local_pkgcache))
-        self._cmdcache("gencaches")
-
     def query(self, package, info=False, names=False, stats=False):
-        if self.cache_type is 'local':
-            if (not exists(self.local_pkgcache) or
-                not getsize(self.local_pkgcache) > 0):
+        if not self.has_lists:
+            return None
 
-                return "chanko is empty"
-
+        # list all packages with short description
         if not package and not info and not names:
-            # list all packages with short description
             results = self._cmdcache("search .", sort=True)
 
+        # list all packages (without description)
         elif not package and not info and names:
-            # list all packages (without description)
             results = self._cmdcache("pkgnames", sort=True)
 
+        # list full package information on all packages
         elif not package and info and not names:
-            # list full package information on all packages
             results = self._cmdcache("dumpavail")
 
+        # list all packages with short desc that match package_glob
         elif package and not info and not names:
-            # list all packages with short desc that match package_glob
             results = self._cmdcache("search %s" % package, sort=True)
 
+        # list all packages (without description) that match a package_glob
         elif package and not info and names:
-            # list all packages (without description) that match a package_glob
             results = self._cmdcache("pkgnames %s" % package, sort=True)
 
+        # list info on specific package
         elif package and info and not names:
-            # list info on specific package
             results = self._cmdcache("show %s" % package)
 
         else:
-            print "options provided do not match a valid query"
+            return "options provided do not match a valid query"
 
         if stats:
             results += "\n\n" + self._cmdcache("stats")
 
         return results
+
+class RemoteCache(Cache):
+    """Sub-level object of the chanko for local cache"""
+    def __init__(self, chanko):
+        super(RemoteCache, self).__init__(chanko, 'remote')
+
+        makedirs(os.path.join(self.cache_lists, 'partial'))
+        self.sources_list = self.chanko.sources_list
+
+    def refresh(self):
+        print "Refreshing remote cache..."
+
+        releases.refresh(self.chanko, self)
+        self._cmdcache("gencaches")
+
+class LocalCache(Cache):
+    """Sub-level object of the chanko for local cache"""
+    def __init__(self, chanko):
+        super(LocalCache, self).__init__(chanko, 'local')
+
+        self.sources_list = os.path.join(self.cache, 'sources.list')
+        file(self.sources_list, "w").write("deb file:/// local debs")
+
+    def refresh(self):
+        print "Refreshing local cache..."
+
+        list = "_dists_local_debs_binary-%s_Packages" % self.chanko.architecture
+        list_path = os.path.join(self.cache_lists, list)
+
+        cmd = "apt-ftparchive packages"
+        cmd += " --db=%s" % os.path.join(self.cache, 'dbcache')
+        cmd += " %s > %s" % (self.chanko.archives, list_path)
+        executil.system(cmd)
+
+        self._cmdcache("gencaches")
 

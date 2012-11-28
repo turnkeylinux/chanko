@@ -1,6 +1,14 @@
 #!/usr/bin/python
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 """
-Purge superseded chanko archives
+Purge superseded archives from chanko
 
 Options:
   -f --force     Dont ask for confirmation before purging/deleting
@@ -10,7 +18,6 @@ Options:
 import os
 import sys
 import getopt
-from os.path import *
 
 from pyproject.pool.pool import PackageCache
 import debversion
@@ -23,7 +30,7 @@ from chanko import Chanko
 def usage():
     print >> sys.stderr, "Syntax: %s [-options]" % sys.argv[0]
 
-def purge(path, force):
+def purge(path, force=False):
     pkgcache = PackageCache(path)
 
     duplicates = []
@@ -48,7 +55,7 @@ def purge(path, force):
     candidates.sort()
     print "Candidates for deletion:"
     for candidate in candidates:
-        print "  " + basename(candidate)
+        print "  " + os.path.basename(candidate)
 
     print "Amount of candidates: %i" % len(candidates)
 
@@ -70,14 +77,15 @@ def main():
     except getopt.GetoptError, e:
         usage(e)
 
-    opt_force = False
+    force = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
-            opt_force = True
+            force = True
 
     chanko = Chanko()
+    purged = purge(chanko.archives, force)
     
-    if purge(chanko.paths.archives, opt_force):
+    if purged:
         chanko.local_cache.refresh()
 
 if __name__ == "__main__":

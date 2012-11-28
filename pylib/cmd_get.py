@@ -1,4 +1,12 @@
 #!/usr/bin/python
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 """
 Get package(s) and their dependencies
 
@@ -13,21 +21,40 @@ Options:
 
 """
 
+import os
+import re
 import sys
 import getopt
-from os.path import *
 
 import help
-from common import parse_inputfile, promote_depends
+from utils import promote_depends, format_bytes
 from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
 
-def display_uris(uris):
-    for uri in uris:
-        print uri.filename
+def parse_inputfile(path):
+    input = file(path, 'r').read().strip()
+
+    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
+    input = re.sub(r'//.*', '', input)
+
+    packages = set()
+    for expr in input.split('\n'):
+        expr = re.sub(r'#.*', '', expr)
+        expr = expr.strip()
+        if not expr:
+            continue
+
+        if expr.startswith("!"):
+            package = expr[1:]
+        else:
+            package = expr
+
+        packages.add(package)
+
+    return packages
 
 def main():
     try:
@@ -36,47 +63,58 @@ def main():
     except getopt.GetoptError, e:
         usage(e)
 
-    opt_force = False
-    opt_pretend = False
-    opt_nodeps = False
+    force = False
+    nodeps = False
+    pretend = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
-            opt_force = True
+            force = True
         elif opt in ('-p', '--pretend'):
-            opt_pretend = True
+            pretend = True
         elif opt in ('-n', '--no-deps'):
-            opt_nodeps = True
+            nodeps = True
 
     if len(args) == 0:
-        usage("bad number of arguments")
+        usage()
 
-    if opt_force and opt_pretend:
+    if force and pretend:
         usage("conflicting options: --force, --pretend")
 
     packages = set()
     for arg in args:
-        if exists(arg):
+        if os.path.exists(arg):
             packages.update(parse_inputfile(arg))
         else:
             packages.add(arg)
 
     chanko = Chanko()
+    packages = promote_depends(chanko.remote_cache, packages)
+    candidates = chanko.get_package_candidates(packages, nodeps)
 
-    pkgcache = join(str(chanko.remote_cache.paths), 'pkgcache.bin')
-    if not exists(pkgcache):
-        chanko.remote_cache.refresh()
+    if len(candidates) == 0:
+        print "Nothing to get..."
+        return
 
-    toget = promote_depends(chanko.remote_cache, packages)
-    if opt_pretend:
-        uris = chanko.remote_cache.get(toget, opt_force, opt_pretend, opt_nodeps)
-        display_uris(uris)
+    bytes = 0
+    for candidate in candidates:
+        bytes += candidate.bytes
+        print candidate.filename
 
-    elif chanko.remote_cache.get(toget, opt_force, opt_pretend, opt_nodeps):
-        chanko.local_cache.refresh()
+    print "Amount of packages: %i" % len(candidates)
+    print "Need to get %s of archives" % format_bytes(bytes)
 
-        metadata = ""
-        if opt_nodeps:
-            metadata = "--no-deps"
+    if pretend:
+        return
+
+    if not force:
+        print "Do you want to continue [y/N]?",
+        if not raw_input() in ['Y', 'y']:
+            print "aborted by user"
+            return
+
+    result = chanko.get_packages(candidates=candidates)
+    if result:
+        metadata = "--no-deps" if nodeps else ""
         chanko.log.update(packages, metadata)
 
 

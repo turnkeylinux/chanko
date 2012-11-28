@@ -1,55 +1,34 @@
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 
-import re
 import os
-import hashlib
+import re
 
 import debinfo
 
 class Error(Exception):
     pass
 
-def mkdir(path):
-    path = str(path)
+def makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def calc_digest(path, len):
-    if len == 32:
-        return md5sum(path)
-
-    sha_digest = {40: hashlib.sha1, 64: hashlib.sha256}
-    if os.path.exists(path):
-        return sha_digest[len](file(path, 'rb').read()).hexdigest()
-
-    return False
-
-def md5sum(path):
-    if os.path.exists(path):
-        return hashlib.md5(file(path, 'rb').read()).hexdigest()
-
-    return False
-
-def parse_inputfile(path):
-    input = file(path, 'r').read().strip()
-
-    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
-    input = re.sub(r'//.*', '', input)
-
-    packages = set()
-    for expr in input.split('\n'):
-        expr = re.sub(r'#.*', '', expr)
-        expr = expr.strip()
-        if not expr:
-            continue
-
-        if expr.startswith("!"):
-            package = expr[1:]
-        else:
-            package = expr
-
-        packages.add(package)
-
-    return packages
+def format_bytes(bytes):
+    G = (1024 * 1024 * 1024)
+    M = (1024 * 1024)
+    K = (1024)
+    if bytes > G:
+        return str(bytes/G) + "G"
+    elif bytes > M:
+        return str(bytes/M) + "M"
+    else:
+        return str(bytes/K) + "K"
 
 def promote_depends(remote_cache, packages):
     """return list of packages included those promoted

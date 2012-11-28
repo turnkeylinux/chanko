@@ -1,4 +1,12 @@
 #!/usr/bin/python
+# Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
+#
+# This file is part of Chanko
+#
+# Chanko is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 """
 Upgrade chanko archives according to log
 
@@ -10,12 +18,12 @@ Options:
 
 import sys
 import getopt
-from os.path import *
 
 import help
-from cmd_purge import purge
+
+import cmd_purge
 from chanko import Chanko
-from common import promote_depends
+from utils import promote_depends, format_bytes
 
 @help.usage(__doc__)
 def usage():
@@ -27,35 +35,51 @@ def main():
     except getopt.GetoptError, e:
         usage(e)
 
-    opt_force = False
-    opt_purge = False
+    force = False
+    purge = False
     for opt, val in opts:
         if opt in ('-f', '--force'):
-            opt_force = True
+            force = True
         elif opt in ('-p', '--purge'):
-            opt_purge = True
+            purge = True
 
     chanko = Chanko()
-
     chanko.remote_cache.refresh()
     chanko.local_cache.refresh()
 
-    upgraded = False
     packages = chanko.log.list()
 
+    upgraded = False
     for metadata in packages:
-        opt_nodeps = False
-        if metadata == '--no-deps':
-            opt_nodeps = True
+        nodeps = True if metadata == "--no-deps" else False
 
         toget = promote_depends(chanko.remote_cache, packages[metadata])
-        if chanko.remote_cache.get(toget, opt_force, nodeps=opt_nodeps):
+        candidates = chanko.get_package_candidates(toget, nodeps)
+
+        if len(candidates) == 0:
+            print "Nothing to get..."
+            return
+
+        bytes = 0
+        for candidate in candidates:
+            bytes += candidate.bytes
+            print candidate.filename
+
+        print "Amount of packages: %i" % len(candidates)
+        print "Need to get %s of archives" % format_bytes(bytes)
+
+        if not force:
+            print "Do you want to continue [y/N]?",
+            if not raw_input() in ['Y', 'y']:
+                print "aborted by user"
+                return
+
+        result = chanko.get_packages(candidates=candidates)
+        if result:
             upgraded = True
 
-    if upgraded:
-        if opt_purge:
-            purge(chanko.paths.archives, opt_force)
-
+    if upgraded and purge:
+        cmd_purge.purge(chanko.paths.archives, force)
         chanko.local_cache.refresh()
 
 if __name__ == "__main__":
