@@ -25,7 +25,7 @@ class Chanko(object):
         self.config = os.path.join(self.base, 'config')
         self.trustedkeys = os.path.join(self.config, 'trustedkeys.gpg')
         self.sources_list = os.path.join(self.config, 'sources.list')
-        arch_path = os.path.join(self.config, 'arch')
+        arch_path = os.path.join(self.config, 'architecture')
 
         for f in (self.sources_list, self.trustedkeys, arch_path):
             if not os.path.exists(f):
