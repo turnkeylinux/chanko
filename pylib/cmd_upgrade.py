@@ -8,7 +8,7 @@
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
 """
-Upgrade chanko archives according to log
+Upgrade chanko archives according to plan
 
 Options:
   -p --purge     Purge superceded archives
@@ -23,7 +23,7 @@ import help
 
 import cmd_purge
 from chanko import Chanko
-from utils import promote_depends, format_bytes
+from utils import format_bytes
 
 @help.usage(__doc__)
 def usage():
@@ -47,14 +47,11 @@ def main():
     chanko.remote_cache.refresh()
     chanko.local_cache.refresh()
 
-    packages = chanko.log.list()
-
     upgraded = False
-    for metadata in packages:
-        nodeps = True if metadata == "--no-deps" else False
-
-        toget = promote_depends(chanko.remote_cache, packages[metadata])
-        candidates = chanko.get_package_candidates(toget, nodeps)
+    plans = chanko.plan.list()
+    for plan in plans:
+        nodeps = True if plan == "nodeps" else False
+        candidates = chanko.get_package_candidates(plans[plan], nodeps)
 
         if len(candidates) == 0:
             print "Nothing to get..."

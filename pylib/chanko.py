@@ -11,7 +11,7 @@ import os
 
 from cache import RemoteCache, LocalCache
 from packages import get_uris, download_uris
-from log import Log
+from plan import Plan
 from utils import makedirs
 
 class Error(Exception):
@@ -41,7 +41,7 @@ class Chanko(object):
         self.local_cache = LocalCache(self)
         self.remote_cache = RemoteCache(self)
 
-        self.log = Log(os.path.join(self.base, 'log'))
+        self.plan = Plan(os.path.join(self.base, 'plan'))
 
     def get_package_candidates(self, packages, nodeps=False):
         if not self.remote_cache.has_lists:

@@ -30,6 +30,28 @@ def format_bytes(bytes):
     else:
         return str(bytes/K) + "K"
 
+def parse_inputfile(path):
+    input = file(path, 'r').read().strip()
+
+    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
+    input = re.sub(r'//.*', '', input)
+
+    packages = set()
+    for expr in input.split('\n'):
+        expr = re.sub(r'#.*', '', expr)
+        expr = expr.strip()
+        if not expr:
+            continue
+
+        if expr.startswith("!"):
+            package = expr[1:]
+        else:
+            package = expr
+
+        packages.add(package)
+
+    return packages
+
 def promote_depends(remote_cache, packages):
     """return list of packages included those promoted
     package*  # promote recommends

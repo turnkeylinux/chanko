@@ -27,34 +27,12 @@ import sys
 import getopt
 
 import help
-from utils import promote_depends, format_bytes
+from utils import parse_inputfile, promote_depends, format_bytes
 from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
-
-def parse_inputfile(path):
-    input = file(path, 'r').read().strip()
-
-    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
-    input = re.sub(r'//.*', '', input)
-
-    packages = set()
-    for expr in input.split('\n'):
-        expr = re.sub(r'#.*', '', expr)
-        expr = expr.strip()
-        if not expr:
-            continue
-
-        if expr.startswith("!"):
-            package = expr[1:]
-        else:
-            package = expr
-
-        packages.add(package)
-
-    return packages
 
 def main():
     try:
@@ -114,8 +92,8 @@ def main():
 
     result = chanko.get_packages(candidates=candidates)
     if result:
-        metadata = "--no-deps" if nodeps else ""
-        chanko.log.update(packages, metadata)
+        plan_name = "nodeps" if nodeps else "main"
+        chanko.plan.update(packages, plan_name)
 
 
 if __name__ == "__main__":
