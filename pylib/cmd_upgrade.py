@@ -49,13 +49,14 @@ def main():
 
     upgraded = False
     plans = chanko.plan.list()
+
     for plan in plans:
         nodeps = True if plan == "nodeps" else False
         candidates = chanko.get_package_candidates(plans[plan], nodeps)
 
         if len(candidates) == 0:
             print "Nothing to get..."
-            return
+            continue
 
         bytes = 0
         for candidate in candidates:
@@ -69,7 +70,7 @@ def main():
             print "Do you want to continue [y/N]?",
             if not raw_input() in ['Y', 'y']:
                 print "aborted by user"
-                return
+                continue
 
         result = chanko.get_packages(candidates=candidates)
         if result:
