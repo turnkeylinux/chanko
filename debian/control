@@ -7,5 +7,5 @@ Standards-Version: 3.6.1
 
 Package: chanko
 Architecture: any
-Depends: pyproject-common, pool, ccurl, curl, bzip2, gpgv, cpp
+Depends: pyproject-common, pool, ccurl, curl, bzip2, gzip, gpgv, cpp
 Description: efficiently get packages from public sources

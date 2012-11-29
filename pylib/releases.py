@@ -21,9 +21,11 @@ class Uri:
         url, destfile, extra = uri.split(' ', 2)
         self.url = url.strip("'")
         self.destfile = destfile
-
-        self.filename = os.path.basename(self.url)
         self.path = os.path.join(destpath, self.destfile)
+
+    @property
+    def filename(self):
+        return os.path.basename(self.url)
 
     @property
     def release(self):
@@ -42,6 +44,12 @@ class Uri:
             path = self.path + ".bz2"
             executil.system("curl -L -f %s -o %s" % (self.url, path))
             executil.system("bzcat %s > %s" % (path, self.path))
+
+        elif self.filename == "Packages.gz":
+            path = self.path + ".gz"
+            executil.system("curl -L -f %s -o %s" % (self.url, path))
+            executil.system("zcat %s > %s" % (path, self.path))
+
         else:
             executil.system("curl -L -f %s -o %s" % (self.url, self.path))
 
@@ -90,7 +98,15 @@ class Release:
             if self._index_in_release(uri_index.path, release_content):
                 continue
 
-            uri_index.download()
+            try:
+                uri_index.download()
+            except executil.ExecError, e:
+                if uri_index.filename == "Packages.bz2" and not e.exitcode == 22:
+                    raise e
+
+                print "* info: Packages.bz2 not available, falling back to gzip..."
+                uri_index.url = uri_index.url.replace("bz2", "gz")
+                uri_index.download()
 
             # verify integrity, delete on failure
             if not self._index_in_release(uri_index.path, release_content):
