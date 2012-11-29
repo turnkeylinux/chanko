@@ -17,6 +17,34 @@ from utils import makedirs
 class Error(Exception):
     pass
 
+class ChankoConfig(dict):
+    def __init__(self, path):
+        if not os.path.exists(path):
+            raise Error("chanko config not found: " + path)
+
+        self.path = path
+        self.required = ['architecture']
+        self._parse()
+
+    def _parse(self):
+        for line in file(self.path).readlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            key, val = line.split("=", 1)
+            self[key.strip().lower()] = val.strip()
+
+        for req in self.required:
+            if not self.has_key(req):
+                raise Error("%s not specified in %s" % (req, self.path))
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError, e:
+            raise AttributeError(e)
+
 class Chanko(object):
     """Top-level object of the chanko"""
 
@@ -25,15 +53,13 @@ class Chanko(object):
         self.config = os.path.join(self.base, 'config')
         self.trustedkeys = os.path.join(self.config, 'trustedkeys.gpg')
         self.sources_list = os.path.join(self.config, 'sources.list')
-        arch_path = os.path.join(self.config, 'architecture')
 
-        for f in (self.sources_list, self.trustedkeys, arch_path):
+        for f in (self.sources_list, self.trustedkeys):
             if not os.path.exists(f):
                 raise Error("required file not found: " + f)
 
-        self.architecture = file(arch_path).read().strip()
-        if not self.architecture:
-            raise Error("architecture is not defined: " + arch_path)
+        conf = ChankoConfig(os.path.join(self.config, 'chanko.conf'))
+        self.architecture = conf.architecture
 
         self.archives = os.path.join(self.base, 'archives')
         makedirs(os.path.join(self.archives, 'partial'))
