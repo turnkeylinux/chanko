@@ -29,14 +29,15 @@ class Uri:
 
     @property
     def release(self):
+        hostname = self.url.split("/")[2]
         m = re.match("(.*)_dists_(.*)_(.*)", self.destfile)
         if m.group(3) == 'Packages':
             s = m.group(2).split("_")
             s.pop()
             s.pop()
-            return "_".join(s)
+            return hostname + "_" + "_".join(s)
         else:
-            return m.group(2)
+            return hostname + "_" + m.group(2)
 
     def download(self):
         print "* get: " + self.destfile
@@ -98,6 +99,7 @@ class Release:
             if self._index_in_release(uri_index.path, release_content):
                 continue
 
+            # attempt download of Packages.bz2, fallback to Packages.gz
             try:
                 uri_index.download()
             except executil.ExecError, e:
