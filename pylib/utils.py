@@ -10,6 +10,8 @@
 import os
 import re
 
+import executil
+import stdtrap
 import debinfo
 
 class Error(Exception):
@@ -30,25 +32,42 @@ def format_bytes(bytes):
     else:
         return str(bytes/K) + "K"
 
-def parse_inputfile(path):
-    input = file(path, 'r').read().strip()
+def cpp(input, cpp_opts=""):
+    """preprocess <input> through cpp -> preprocessed output
+       input may be path/to/file or iterable data type
+    """
+    args = [ "-Ulinux" ]
 
-    input = re.sub(r'(?s)/\*.*?\*/', '', input) # strip c-style comments
-    input = re.sub(r'//.*', '', input)
+    for opt in cpp_opts.split(" "):
+        args.append(opt)
+
+    command = ["cpp", input]
+    if args:
+        command += args
+
+    trap = stdtrap.StdTrap()
+    try:
+        executil.system(*command)
+    except executil.ExecError, e:
+        trap.close()
+        trapped_stderr = trap.stderr.read()
+        raise executil.ExecError(" ".join(command), e.exitcode, trapped_stderr)
+
+    trap.close()
+    return trap.stdout.read()
+
+def parse_inputfile(path):
+    cpp_opts = os.environ.get("CHANKO_PLAN_CPP", "")
+    output = cpp(path, cpp_opts)
 
     packages = set()
-    for expr in input.split('\n'):
+    for expr in output.split('\n'):
         expr = re.sub(r'#.*', '', expr)
         expr = expr.strip()
         if not expr:
             continue
 
-        if expr.startswith("!"):
-            package = expr[1:]
-        else:
-            package = expr
-
-        packages.add(package)
+        packages.add(expr)
 
     return packages
 
@@ -64,7 +83,7 @@ def promote_depends(remote_cache, packages):
         if fields.has_key(field):
             for dep in fields[field].split(","):
                 dep = dep.strip()
-                m = re.match(r'([a-z0-9][a-z0-9\+\-\.]+)(?:\s+\((.*?)\))?$',dep)
+                m = re.match(r'([a-z0-9][a-z0-9\+\-\.]+)(?:\s+\((.*?)\))?$', dep)
                 if not m:
                     raise Error("illegally formatted dependency (%s)" % dep)
 

@@ -23,7 +23,7 @@ class ChankoConfig(dict):
             raise Error("chanko config not found: " + path)
 
         self.path = path
-        self.required = ['architecture']
+        self.required = ['architecture', 'plan_cpp']
         self._parse()
 
     def _parse(self):
@@ -60,6 +60,7 @@ class Chanko(object):
 
         conf = ChankoConfig(os.path.join(self.config, 'chanko.conf'))
         self.architecture = conf.architecture
+        os.environ['CHANKO_PLAN_CPP'] = conf.plan_cpp
 
         self.archives = os.path.join(self.base, 'archives')
         makedirs(os.path.join(self.archives, 'partial'))
