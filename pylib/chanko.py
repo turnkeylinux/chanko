@@ -23,7 +23,7 @@ class ChankoConfig(dict):
             raise Error("chanko config not found: " + path)
 
         self.path = path
-        self.required = ['architecture', 'plan_cpp']
+        self.required = ['release', 'architecture', 'plan_cpp']
         self._parse()
 
     def _parse(self):
@@ -38,6 +38,10 @@ class ChankoConfig(dict):
         for req in self.required:
             if not self.has_key(req):
                 raise Error("%s not specified in %s" % (req, self.path))
+
+    @property
+    def ccurl_cache(self):
+        return os.path.join(os.environ.get('HOME'), '.ccurl/chanko', self['release'])
 
     def __getattr__(self, key):
         try:
@@ -60,6 +64,7 @@ class Chanko(object):
 
         conf = ChankoConfig(os.path.join(self.config, 'chanko.conf'))
         self.architecture = conf.architecture
+        os.environ['CCURL_CACHE'] = conf.ccurl_cache
         os.environ['CHANKO_PLAN_CPP'] = conf.plan_cpp
 
         self.archives = os.path.join(self.base, 'archives')
