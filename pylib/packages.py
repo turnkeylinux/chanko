@@ -35,6 +35,7 @@ class Uri:
         digest = getattr(hashlib, self.hashtype.lower())(content).hexdigest()
         if not digest == self.digest:
             os.remove(self.path)
+            executil.system("ccurl-del", self.url)
             raise Error("verification failed: ", self.filename)
 
 def get_uris(chanko, cache, packages, nodeps=False):
