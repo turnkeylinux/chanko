@@ -28,7 +28,7 @@ class Uri:
 
     def download(self):
         print "* get: " + self.filename
-        executil.system("ccurl", self.url, self.path)
+        executil.system("ccurl-get", self.url, self.path)
 
         # verify integrity, delete on failure
         content = file(self.path, 'rb').read()
