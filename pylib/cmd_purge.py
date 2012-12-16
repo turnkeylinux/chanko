@@ -21,10 +21,9 @@ import getopt
 
 from pyproject.pool.pool import PackageCache
 import debversion
-import executil
 
 import help
-from chanko import Chanko
+from chanko import get_chankos
 
 @help.usage(__doc__)
 def usage():
@@ -82,11 +81,11 @@ def main():
         if opt in ('-f', '--force'):
             force = True
 
-    chanko = Chanko()
-    purged = purge(chanko.archives, force)
-    
-    if purged:
-        chanko.local_cache.refresh()
+    for chanko in get_chankos():
+        purged = purge(chanko.archives, force)
+
+        if purged:
+            chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

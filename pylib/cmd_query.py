@@ -10,9 +10,9 @@
 """
 Query chanko
 
-If package_glob is provided, print only those packages whose names match the 
+If package_glob is provided, print only those packages whose names match the
 glob otherwise, by default, print a list of all packages
-    
+
 Arguments:
   -r  --remote   Query remote packages
   -l  --local    Query local packages stored in the chanko
@@ -30,7 +30,7 @@ import sys
 import getopt
 
 import help
-from chanko import Chanko
+from chanko import get_chankos
 
 @help.usage(__doc__)
 def usage():
@@ -39,7 +39,7 @@ def usage():
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "rl",
-                                   ['remote', 'local', 
+                                   ['remote', 'local',
                                     'info', 'names', 'stats'])
 
     except getopt.GetoptError, e:
@@ -69,16 +69,16 @@ def main():
     if not cache_type:
         usage("--remote or --local is required")
 
-    chanko = Chanko()
-    cache = getattr(chanko, cache_type + "_cache")
-    results = cache.query(package, **kws)
+    for chanko in get_chankos():
+        cache = getattr(chanko, cache_type + "_cache")
+        results = cache.query(package, **kws)
 
-    if results == None:
-        print "%s cache is empty" % cache_type.capitalize()
-    elif results == "":
-        print "No matches found"
-    else:
-        print results
+        if results == None:
+            print "%s cache is empty" % cache_type.capitalize()
+        elif results == "":
+            print "No matches found"
+        else:
+            print results
 
 
 if __name__ == "__main__":

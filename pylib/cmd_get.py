@@ -22,13 +22,12 @@ Options:
 """
 
 import os
-import re
 import sys
 import getopt
 
 import help
 from utils import parse_inputfile, promote_depends, format_bytes
-from chanko import Chanko
+from chanko import get_chankos
 
 @help.usage(__doc__)
 def usage():
@@ -65,35 +64,35 @@ def main():
         else:
             packages.add(arg)
 
-    chanko = Chanko()
-    packages = promote_depends(chanko.remote_cache, packages)
-    candidates = chanko.get_package_candidates(packages, nodeps)
+    for chanko in get_chankos():
+        packages = promote_depends(chanko.remote_cache, packages)
+        candidates = chanko.get_package_candidates(packages, nodeps)
 
-    if len(candidates) == 0:
-        print "Nothing to get..."
-        return
+        if len(candidates) == 0:
+            print "Nothing to get..."
+            continue
 
-    bytes = 0
-    for candidate in candidates:
-        bytes += candidate.bytes
-        print candidate.filename
+        bytes = 0
+        for candidate in candidates:
+            bytes += candidate.bytes
+            print candidate.filename
 
-    print "Amount of packages: %i" % len(candidates)
-    print "Need to get %s of archives" % format_bytes(bytes)
+        print "Amount of packages: %i" % len(candidates)
+        print "Need to get %s of archives" % format_bytes(bytes)
 
-    if pretend:
-        return
+        if pretend:
+            continue
 
-    if not force:
-        print "Do you want to continue [y/N]?",
-        if not raw_input() in ['Y', 'y']:
-            print "aborted by user"
-            return
+        if not force:
+            print "Do you want to continue [y/N]?",
+            if not raw_input() in ['Y', 'y']:
+                print "aborted by user"
+                continue
 
-    result = chanko.get_packages(candidates=candidates)
-    if result:
-        plan_name = "nodeps" if nodeps else "main"
-        chanko.plan.update(packages, plan_name)
+        result = chanko.get_packages(candidates=candidates)
+        if result:
+            plan_name = "nodeps" if nodeps else "main"
+            chanko.plan.update(packages, plan_name)
 
 
 if __name__ == "__main__":

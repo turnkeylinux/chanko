@@ -20,15 +20,14 @@ import sys
 import getopt
 
 import help
-
 import cmd_purge
-from chanko import Chanko
+from chanko import get_chankos
 from utils import format_bytes
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s [-options]" % sys.argv[0]
-    
+
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp", ['force', 'purge'])
@@ -43,42 +42,42 @@ def main():
         elif opt in ('-p', '--purge'):
             purge = True
 
-    chanko = Chanko()
-    chanko.remote_cache.refresh()
-    chanko.local_cache.refresh()
+    for chanko in get_chankos():
+        chanko.remote_cache.refresh()
+        chanko.local_cache.refresh()
 
-    upgraded = False
-    plans = chanko.plan.list()
+        upgraded = False
+        plans = chanko.plan.list()
 
-    for plan in plans:
-        nodeps = True if plan == "nodeps" else False
-        candidates = chanko.get_package_candidates(plans[plan], nodeps)
+        for plan in plans:
+            nodeps = True if plan == "nodeps" else False
+            candidates = chanko.get_package_candidates(plans[plan], nodeps)
 
-        if len(candidates) == 0:
-            print "Nothing to get..."
-            continue
-
-        bytes = 0
-        for candidate in candidates:
-            bytes += candidate.bytes
-            print candidate.filename
-
-        print "Amount of packages: %i" % len(candidates)
-        print "Need to get %s of archives" % format_bytes(bytes)
-
-        if not force:
-            print "Do you want to continue [y/N]?",
-            if not raw_input() in ['Y', 'y']:
-                print "aborted by user"
+            if len(candidates) == 0:
+                print "Nothing to get..."
                 continue
 
-        result = chanko.get_packages(candidates=candidates)
-        if result:
-            upgraded = True
+            bytes = 0
+            for candidate in candidates:
+                bytes += candidate.bytes
+                print candidate.filename
 
-    if upgraded and purge:
-        cmd_purge.purge(chanko.paths.archives, force)
-        chanko.local_cache.refresh()
+            print "Amount of packages: %i" % len(candidates)
+            print "Need to get %s of archives" % format_bytes(bytes)
+
+            if not force:
+                print "Do you want to continue [y/N]?",
+                if not raw_input() in ['Y', 'y']:
+                    print "aborted by user"
+                    continue
+
+            result = chanko.get_packages(candidates=candidates)
+            if result:
+                upgraded = True
+
+        if upgraded and purge:
+            cmd_purge.purge(chanko.paths.archives, force)
+            chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

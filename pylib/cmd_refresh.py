@@ -19,12 +19,12 @@ Arguments:
 import sys
 
 import help
-from chanko import Chanko
+from chanko import get_chankos
 
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s (-r | -l | -a)" % sys.argv[0]
-    
+
 def main():
     if len(sys.argv) != 2:
         usage()
@@ -34,22 +34,22 @@ def main():
 
     if sys.argv[1] in ('-r', '--remote'):
         remote = True
-    
+
     elif sys.argv[1] in ('-l', '--local'):
         local  = True
-    
+
     elif sys.argv[1] in ('-a', '--all'):
         remote = True
         local  = True
     else:
         usage()
-    
-    chanko = Chanko()
-    if remote:
-        chanko.remote_cache.refresh()
-    
-    if local:
-        chanko.local_cache.refresh()
+
+    for chanko in get_chankos():
+        if remote:
+            chanko.remote_cache.refresh()
+
+        if local:
+            chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

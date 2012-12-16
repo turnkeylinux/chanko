@@ -31,7 +31,7 @@ Anatomy
 -------
 
     .internal/  - created automatically, used internally
-    archives/   - created automatically, stored downloaded packages
+    archives/   - created automatically, stores downloaded packages
     config/     - configuration folder, see below
     plan/       - create automatically, see below
 
@@ -39,11 +39,6 @@ Configuration
 -------------
 
 A chanko requires 3 files stored in the sub-folder config/, for example:
-
-cat config/chanko.conf
-    RELEASE=debian/squeeze
-    ARCHITECTURE=i386
-    PLAN_CPP=-DI386=y
 
 cat config/sources.list
     deb http://cdn.debian.net/debian squeeze main
@@ -55,6 +50,24 @@ gpg --keyring ./config/trustedkeys.gpg --list-keys
 
     pub   4096R/B98321F9 2010-08-07 [expires: 2017-08-05]
     uid                  Squeeze Stable Release Key <debian-release@l...
+
+cat config/chanko.conf
+    RELEASE=debian/wheezy
+    ARCHITECTURES=amd64
+    PLAN_CPP=-DFOO=y
+
+To allow for local customizations such as specifying a different
+architecture, but still benefit from automatic merges without creating
+merge conflicts, a local chanko configuration can be created:
+
+cat config/chanko.conf.local
+    ARCHITECTURES=i386
+
+Lastly, chanko supports multiple architectures, but shouldn't be needed
+in most cases. The main reason being the DRY principle.
+
+cat config/chanko.conf.local
+    ARCHITECTURES=i386 amd64
 
 Plans
 -----
@@ -76,17 +89,19 @@ this case, another plan should be used to specify one of the conflicting
 packages.
 
 Plans are processed through cpp which give plans some intelligence, as
-well as support for cpp comments. For example, the same plan can be
-re-used with different chanko's based on different architectures:
+well as support for cpp comments. Automatically, the architecture and
+plan folder will be specified as additional cpp_opts.
 
-grep PLAN_CPP config/chanko.conf
-    PLAN_CPP=-DI386=y
+For example:
 
-cat plans/main
-    /* architecture dependent packages */
+    #ifdef FOO
+    #include <include/foo>
+    #endif
+
     #ifdef I386
     linux-image-686
     #endif
+
     #ifdef AMD64
     linux-image-amd64
     #endif

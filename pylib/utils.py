@@ -32,18 +32,14 @@ def format_bytes(bytes):
     else:
         return str(bytes/K) + "K"
 
-def cpp(input, cpp_opts=""):
+def cpp(input, cpp_opts=[]):
     """preprocess <input> through cpp -> preprocessed output
        input may be path/to/file or iterable data type
     """
-    args = [ "-Ulinux" ]
-
-    for opt in cpp_opts.split(" "):
-        args.append(opt)
+    cpp_opts.append("-Ulinux")
 
     command = ["cpp", input]
-    if args:
-        command += args
+    command += cpp_opts
 
     trap = stdtrap.StdTrap()
     try:
@@ -56,8 +52,7 @@ def cpp(input, cpp_opts=""):
     trap.close()
     return trap.stdout.read()
 
-def parse_inputfile(path):
-    cpp_opts = os.environ.get("CHANKO_PLAN_CPP", "")
+def parse_inputfile(path, cpp_opts=[]):
     output = cpp(path, cpp_opts)
 
     packages = set()

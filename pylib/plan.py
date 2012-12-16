@@ -11,16 +11,20 @@ import os
 from utils import makedirs, parse_inputfile
 
 class Plan:
-    def __init__(self, path):
+    def __init__(self, path, architecture, cpp_opts=[]):
         self.base = path
         makedirs(self.base)
+
+        cpp_opts.append("-I" + self.base)
+        cpp_opts.append("-D%s=y" % architecture.upper())
+        self.cpp_opts = cpp_opts
 
     def update(self, package_names, plan_name):
         plan_path = os.path.join(self.base, plan_name)
 
         current_plan = []
         if os.path.exists(plan_path):
-            current_plan = parse_inputfile(plan_path)
+            current_plan = parse_inputfile(plan_path, self.cpp_opts)
 
         for package_name in package_names:
             if not package_name in current_plan:
@@ -30,7 +34,10 @@ class Plan:
         plans = {}
         for plan_name in os.listdir(self.base):
             plan_path = os.path.join(self.base, plan_name)
-            plans[plan_name] = parse_inputfile(plan_path)
+            if not os.path.isfile(plan_path):
+                continue
+
+            plans[plan_name] = parse_inputfile(plan_path, self.cpp_opts)
 
         return plans
 
