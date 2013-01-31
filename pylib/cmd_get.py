@@ -26,7 +26,7 @@ import sys
 import getopt
 
 import help
-from utils import parse_inputfile, promote_depends, format_bytes
+from utils import parse_inputfile, format_bytes
 from chanko import get_chankos
 
 @help.usage(__doc__)
@@ -65,7 +65,6 @@ def main():
             packages.add(arg)
 
     for chanko in get_chankos():
-        packages = promote_depends(chanko.remote_cache, packages)
         candidates = chanko.get_package_candidates(packages, nodeps)
 
         if len(candidates) == 0:
