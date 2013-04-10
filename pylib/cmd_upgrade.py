@@ -13,6 +13,7 @@ Upgrade chanko archives according to plan
 Options:
   -p --purge     Purge superceded archives
   -f --force     Dont ask for confirmation before downloading and purging
+  --no-refresh   Dont refresh (not recommended)
 
 """
 
@@ -30,21 +31,27 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp", ['force', 'purge'])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], ":fp",
+                                       ['force', 'purge', 'no-refresh'])
     except getopt.GetoptError, e:
         usage(e)
 
     force = False
     purge = False
+    refresh = True
     for opt, val in opts:
         if opt in ('-f', '--force'):
             force = True
         elif opt in ('-p', '--purge'):
             purge = True
+        elif opt == "--no-refresh":
+            refresh = False
 
     chanko = Chanko()
-    chanko.remote_cache.refresh()
-    chanko.local_cache.refresh()
+
+    if refresh:
+        chanko.remote_cache.refresh()
+        chanko.local_cache.refresh()
 
     upgraded = False
     plans = chanko.plan.list()
