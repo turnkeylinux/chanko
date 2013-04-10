@@ -22,8 +22,7 @@ class Cache(object):
         self.chanko = chanko
         self.type = type
 
-        self.base = os.path.join(self.chanko.base, '.internal',
-                                 self.chanko.architecture)
+        self.base = os.path.join(self.chanko.base, '.internal')
         self.cache = os.path.join(self.base, self.type)
         self.cache_lists = os.path.join(self.cache, 'lists')
         makedirs(self.cache_lists)

@@ -19,7 +19,7 @@ Arguments:
 import sys
 
 import help
-from chanko import get_chankos
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -44,12 +44,12 @@ def main():
     else:
         usage()
 
-    for chanko in get_chankos():
-        if remote:
-            chanko.remote_cache.refresh()
+    chanko = Chanko()
+    if remote:
+        chanko.remote_cache.refresh()
 
-        if local:
-            chanko.local_cache.refresh()
+    if local:
+        chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

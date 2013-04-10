@@ -30,7 +30,7 @@ import sys
 import getopt
 
 import help
-from chanko import get_chankos
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -69,16 +69,16 @@ def main():
     if not cache_type:
         usage("--remote or --local is required")
 
-    for chanko in get_chankos():
-        cache = getattr(chanko, cache_type + "_cache")
-        results = cache.query(package, **kws)
+    chanko = Chanko()
+    cache = getattr(chanko, cache_type + "_cache")
+    results = cache.query(package, **kws)
 
-        if results == None:
-            print "%s cache is empty" % cache_type.capitalize()
-        elif results == "":
-            print "No matches found"
-        else:
-            print results
+    if results == None:
+        print "%s cache is empty" % cache_type.capitalize()
+    elif results == "":
+        print "No matches found"
+    else:
+        print results
 
 
 if __name__ == "__main__":

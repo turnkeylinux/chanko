@@ -52,22 +52,8 @@ gpg --keyring ./config/trustedkeys.gpg --list-keys
     uid                  Squeeze Stable Release Key <debian-release@l...
 
 cat config/chanko.conf
-    RELEASE=debian/wheezy
-    ARCHITECTURES=amd64
+    RELEASE=debian/squeeze
     PLAN_CPP=-DFOO=y
-
-To allow for local customizations such as specifying a different
-architecture, but still benefit from automatic merges without creating
-merge conflicts, a local chanko configuration can be created:
-
-cat config/chanko.conf.local
-    ARCHITECTURES=i386
-
-Lastly, chanko supports multiple architectures, but shouldn't be needed
-in most cases. The main reason being the DRY principle.
-
-cat config/chanko.conf.local
-    ARCHITECTURES=i386 amd64
 
 Plans
 -----

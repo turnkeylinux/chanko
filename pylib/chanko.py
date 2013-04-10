@@ -14,6 +14,8 @@ from packages import get_uris, download_uris
 from plan import Plan
 from utils import makedirs
 
+from executil import getoutput
+
 class Error(Exception):
     pass
 
@@ -22,16 +24,10 @@ class ChankoConfig(dict):
         if not os.path.exists(path):
             raise Error("chanko config not found: " + path)
 
-        self.required = ['release', 'architectures']
-        self['plan_cpp'] = [] # optional
-
+        self.required = ['release']
+        self['plan_cpp'] = "" # optional
         self._parse(path)
         self._verify(self.required)
-
-    def override(self, path):
-        if os.path.exists(path):
-            self._parse(path)
-            self._verify(self.required)
 
     def _parse(self, path):
         for line in file(path).readlines():
@@ -40,8 +36,7 @@ class ChankoConfig(dict):
                 continue
 
             key, val = line.split("=", 1)
-            val = val.strip()
-            self[key.strip().lower()] = val.split(" ") if val else []
+            self[key.strip().lower()] = val.strip()
 
     def _verify(self, required):
         for req in self.required:
@@ -54,7 +49,7 @@ class ChankoConfig(dict):
     @property
     def ccurl_cache(self):
         home = os.environ.get('HOME')
-        return os.path.join(home, '.ccurl/chanko', self.release[0])
+        return os.path.join(home, '.ccurl/chanko', self.release)
 
     def __getattr__(self, key):
         try:
@@ -65,10 +60,10 @@ class ChankoConfig(dict):
 class Chanko(object):
     """Top-level object of the chanko"""
 
-    def __init__(self, base, config, architecture, plan_cpp=[]):
-        self.base = base
-        self.config = config
-        self.architecture = architecture
+    def __init__(self):
+        self.base = os.getcwd()
+        self.config = os.path.join(self.base, 'config')
+        self.architecture = getoutput("dpkg --print-architecture")
 
         self.trustedkeys = os.path.join(self.config, 'trustedkeys.gpg')
         self.sources_list = os.path.join(self.config, 'sources.list')
@@ -76,10 +71,14 @@ class Chanko(object):
             if not os.path.exists(f):
                 raise Error("required file not found: " + f)
 
-        self.archives = os.path.join(self.base, 'archives', self.architecture)
+        conf = ChankoConfig(os.path.join(self.config, 'chanko.conf'))
+        os.environ['CCURL_CACHE'] = conf.ccurl_cache
+
+        self.archives = os.path.join(self.base, 'archives')
         makedirs(os.path.join(self.archives, 'partial'))
 
         plan_path = os.path.join(self.base, 'plan')
+        plan_cpp = conf.plan_cpp.replace("-", " -").strip().split(" ")
         self.plan = Plan(plan_path, self.architecture, plan_cpp)
 
         self.local_cache = LocalCache(self)
@@ -103,20 +102,4 @@ class Chanko(object):
             self.local_cache.refresh()
 
         return result
-
-def get_chankos():
-    base = os.getcwd()
-    config = os.path.join(base, 'config')
-    conf = ChankoConfig(os.path.join(config, 'chanko.conf'))
-    conf.override(os.path.join(config, 'chanko.conf.local'))
-
-    os.environ['CCURL_CACHE'] = conf.ccurl_cache
-
-    chankos = []
-    for arch in conf.architectures:
-        plan_cpp = list(conf.plan_cpp)
-        chanko = Chanko(base, config, arch, plan_cpp)
-        chankos.append(chanko)
-
-    return chankos
 

@@ -23,7 +23,7 @@ from pyproject.pool.pool import PackageCache
 import debversion
 
 import help
-from chanko import get_chankos
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -81,11 +81,11 @@ def main():
         if opt in ('-f', '--force'):
             force = True
 
-    for chanko in get_chankos():
-        purged = purge(chanko.archives, force)
+    chanko = Chanko()
+    purged = purge(chanko.archives, force)
 
-        if purged:
-            chanko.local_cache.refresh()
+    if purged:
+        chanko.local_cache.refresh()
 
 if __name__ == "__main__":
     main()

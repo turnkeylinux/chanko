@@ -27,7 +27,7 @@ import getopt
 
 import help
 from utils import parse_inputfile, format_bytes
-from chanko import get_chankos
+from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
@@ -64,34 +64,34 @@ def main():
         else:
             packages.add(arg)
 
-    for chanko in get_chankos():
-        candidates = chanko.get_package_candidates(packages, nodeps)
+    chanko = Chanko()
+    candidates = chanko.get_package_candidates(packages, nodeps)
 
-        if len(candidates) == 0:
-            print "Nothing to get..."
-            continue
+    if len(candidates) == 0:
+        print "Nothing to get..."
+        return
 
-        bytes = 0
-        for candidate in candidates:
-            bytes += candidate.bytes
-            print candidate.filename
+    bytes = 0
+    for candidate in candidates:
+        bytes += candidate.bytes
+        print candidate.filename
 
-        print "Amount of packages: %i" % len(candidates)
-        print "Need to get %s of archives" % format_bytes(bytes)
+    print "Amount of packages: %i" % len(candidates)
+    print "Need to get %s of archives" % format_bytes(bytes)
 
-        if pretend:
-            continue
+    if pretend:
+        return
 
-        if not force:
-            print "Do you want to continue [y/N]?",
-            if not raw_input() in ['Y', 'y']:
-                print "aborted by user"
-                continue
+    if not force:
+        print "Do you want to continue [y/N]?",
+        if not raw_input() in ['Y', 'y']:
+            print "aborted by user"
+            return
 
-        result = chanko.get_packages(candidates=candidates)
-        if result:
-            plan_name = "nodeps" if nodeps else "main"
-            chanko.plan.update(packages, plan_name)
+    result = chanko.get_packages(candidates=candidates)
+    if result:
+        plan_name = "nodeps" if nodeps else "main"
+        chanko.plan.update(packages, plan_name)
 
 
 if __name__ == "__main__":
