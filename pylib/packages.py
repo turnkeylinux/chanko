@@ -23,7 +23,8 @@ class Uri:
         self.path = os.path.join(destpath, destfile)
         self.name, self.version = destfile.split("_")[:2]
         self.bytes = int(bytes)
-        self.hashtype, self.digest = hash.split(":")
+        hashtype, self.digest = hash.split(":")
+        self.hashtype = "md5" if hashtype.lower() == "md5sum" else hashtype
         self.filename = os.path.basename(self.url)
 
     def download(self):
@@ -48,7 +49,7 @@ def get_uris(chanko, cache, packages, nodeps=False):
             return []
         else:
             raise Error("get_uris raised error: ", e)
-    
+
     uris = []
     for r in raw.split("\n"):
         if r.startswith("Need to get 0B"):
