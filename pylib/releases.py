@@ -74,7 +74,7 @@ class Release:
 
         if uri.filename == "Packages.bz2":
             self.uri_indexes.append(uri)
-    
+
     def _index_in_release(self, index_path, release_content):
         if not os.path.exists(index_path):
             return False
@@ -120,6 +120,15 @@ def refresh(chanko, cache):
     raw = executil.getoutput("apt-get %s --print-uris update" % cache.options)
     for r in raw.split("\n"):
         if "Translation" in r:
+            continue
+
+        # hack to fallback to old release files until properly supported
+        if "InRelease" in r:
+            for f in ("Release", "Release.gpg"):
+                uri = Uri(r.replace("InRelease", f), destpath=cache.cache_lists)
+                release = releases.get(uri.release, Release(uri.release, chanko))
+                release.add_uri(uri)
+                releases[uri.release] = release
             continue
 
         uri = Uri(r, destpath=cache.cache_lists)
