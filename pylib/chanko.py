@@ -78,7 +78,8 @@ class Chanko(object):
         makedirs(os.path.join(self.archives, 'partial'))
 
         plan_path = os.path.join(self.base, 'plan')
-        plan_cpp = conf.plan_cpp.replace("-", " -").strip().split(" ")
+        plan_cpp = conf.plan_cpp.replace("-", " -").strip()
+        plan_cpp = plan_cpp.split(" ") if plan_cpp else []
         self.plan = Plan(plan_path, self.architecture, plan_cpp)
 
         self.local_cache = LocalCache(self)
