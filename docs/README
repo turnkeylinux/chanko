@@ -102,7 +102,11 @@ cd $FAB_PATH/chankos/$CODENAME.chanko
 
 mkdir config
 echo RELEASE=debian/$CODENAME > config/chanko.conf
-echo PLAN_CPP= >> config/chanko.conf
+echo PLAN_CPP=-DTURNKEY=y >> config/chanko.conf
+
+mkdir plan/include
+cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
+cp ../PREVIOUS_CODENAME.chanko/plan/include/turnkey plan/include/turnkey
 
 # http://packages.debian.org/debian-archive-keyring
 # download deb from same directory as dsc link
@@ -111,9 +115,6 @@ dpkg-deb -x debian-archive-keyring_*_all.deb tmp
 gpg --list-keys --keyring=./tmp/usr/share/keyrings/debian-archive-keyring.gpg
 cp tmp/usr/share/keyrings/debian-archive-keyring.gpg config/trustedkeys.gpg
 rm -rf tmp *.deb
-
-mkdir plan
-cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
 
 chanko-upgrade
 
