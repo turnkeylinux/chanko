@@ -92,3 +92,34 @@ For example:
     linux-image-amd64
     #endif
 
+Creating a chanko from scratch (ie. transition)
+-----------------------------------------------
+
+CODENAME=...
+
+mkdir $FAB_PATH/chankos/$CODENAME.chanko
+cd $FAB_PATH/chankos/$CODENAME.chanko
+
+mkdir config
+echo RELEASE=debian/$CODENAME > config/chanko.conf
+echo PLAN_CPP= >> config/chanko.conf
+
+# http://packages.debian.org/debian-archive-keyring
+# download deb from same directory as dsc link
+mkdir tmp
+dpkg-deb -x debian-archive-keyring_*_all.deb tmp
+gpg --list-keys --keyring=./tmp/usr/share/keyrings/debian-archive-keyring.gpg
+cp tmp/usr/share/keyrings/debian-archive-keyring.gpg config/trustedkeys.gpg
+rm -rf tmp *.deb
+
+mkdir plan
+cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
+
+chanko-upgrade
+
+git-init
+echo .internal > .gitignore
+echo archives >> .gitignore
+git-add .
+git-commit -m "initial commit"
+
