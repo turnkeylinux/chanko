@@ -62,7 +62,7 @@ def main():
 
         if len(candidates) == 0:
             print "Nothing to get..."
-            return
+            continue
 
         bytes = 0
         for candidate in candidates:
