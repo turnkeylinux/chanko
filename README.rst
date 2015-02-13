@@ -15,7 +15,7 @@ dropped it's dependency of sumo, but the name has stuck.
 Commands
 --------
 
-Chanko has 5 commands:
+Chanko has 5 commands::
 
     get         - Get package(s) and their dependencies
     upgrade     - Upgrade packages according to plan
@@ -23,12 +23,14 @@ Chanko has 5 commands:
     refresh     - Refresh the index files and cache
     query       - Query the chanko
 
-Refer to the commands help for more information, for example:
+Refer to the commands help for more information, for example::
 
     chanko-get --help
 
-Anatomy
--------
+Filesystem anatomy
+------------------
+
+::
 
     .internal/  - created automatically, used internally
     archives/   - created automatically, stores downloaded packages
@@ -38,20 +40,22 @@ Anatomy
 Configuration
 -------------
 
-A chanko requires 3 files stored in the sub-folder config/, for example:
+A chanko requires 3 files stored in the sub-folder config/
 
-cat config/sources.list
+For example::
+
+    $ cat config/sources.list
     deb http://cdn.debian.net/debian squeeze main
     deb http://security.debian.org/ squeeze/updates main
 
-gpg --keyring ./config/trustedkeys.gpg --list-keys
+    $ gpg --keyring ./config/trustedkeys.gpg --list-keys
     pub   4096R/473041FA 2010-08-27 [expires: 2018-03-05]
     uid                  Debian Archive Automatic Signing Key (6.0/sq...
 
     pub   4096R/B98321F9 2010-08-07 [expires: 2017-08-05]
     uid                  Squeeze Stable Release Key <debian-release@l...
 
-cat config/chanko.conf
+    $ cat config/chanko.conf
     RELEASE=debian/squeeze
     PLAN_CPP=-DFOO=y
 
@@ -59,7 +63,7 @@ Plans
 -----
 
 Plans are stored in the plans sub-folder. A plan can be named anything
-but there are 2 'special' plan names:
+but there are 2 'special' plan names::
 
     - plan/main     - new packages added to the chanko with chanko-get
                       will be appended to this plan by default.
@@ -78,7 +82,7 @@ Plans are processed through cpp which give plans some intelligence, as
 well as support for cpp comments. Automatically, the architecture and
 plan folder will be specified as additional cpp_opts.
 
-For example:
+For example::
 
     #ifdef FOO
     #include <include/foo>
@@ -92,35 +96,37 @@ For example:
     linux-image-amd64
     #endif
 
-Creating a chanko from scratch (ie. transition)
------------------------------------------------
+Usage examples
+--------------
 
-CODENAME=...
+Creating a chanko from scratch (ie. transition)::
 
-mkdir $FAB_PATH/chankos/$CODENAME.chanko
-cd $FAB_PATH/chankos/$CODENAME.chanko
+    CODENAME=...
 
-mkdir config
-echo RELEASE=debian/$CODENAME > config/chanko.conf
-echo PLAN_CPP=-DTURNKEY=y >> config/chanko.conf
+    mkdir $FAB_PATH/chankos/$CODENAME.chanko
+    cd $FAB_PATH/chankos/$CODENAME.chanko
 
-mkdir plan/include
-cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
-cp ../PREVIOUS_CODENAME.chanko/plan/include/turnkey plan/include/turnkey
+    mkdir config
+    echo RELEASE=debian/$CODENAME > config/chanko.conf
+    echo PLAN_CPP=-DTURNKEY=y >> config/chanko.conf
 
-# http://packages.debian.org/debian-archive-keyring
-# download deb from same directory as dsc link
-mkdir tmp
-dpkg-deb -x debian-archive-keyring_*_all.deb tmp
-gpg --list-keys --keyring=./tmp/usr/share/keyrings/debian-archive-keyring.gpg
-cp tmp/usr/share/keyrings/debian-archive-keyring.gpg config/trustedkeys.gpg
-rm -rf tmp *.deb
+    mkdir plan/include
+    cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
+    cp ../PREVIOUS_CODENAME.chanko/plan/include/turnkey plan/include/turnkey
 
-chanko-upgrade
+    # http://packages.debian.org/debian-archive-keyring
+    # download deb from same directory as dsc link
+    mkdir tmp
+    dpkg-deb -x debian-archive-keyring_*_all.deb tmp
+    gpg --list-keys --keyring=./tmp/usr/share/keyrings/debian-archive-keyring.gpg
+    cp tmp/usr/share/keyrings/debian-archive-keyring.gpg config/trustedkeys.gpg
+    rm -rf tmp *.deb
 
-git-init
-echo .internal > .gitignore
-echo archives >> .gitignore
-git-add .
-git-commit -m "initial commit"
+    chanko-upgrade
+
+    git-init
+    echo .internal > .gitignore
+    echo archives >> .gitignore
+    git-add .
+    git-commit -m "initial commit"
 
