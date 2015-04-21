@@ -110,7 +110,10 @@ Creating a chanko from scratch (ie. transition)::
     echo RELEASE=debian/$CODENAME > config/chanko.conf
     echo PLAN_CPP=-DTURNKEY=y >> config/chanko.conf
 
-    mkdir plan/include
+    cp ../PREVIOUS_CODENAME.chanko/config/sources.list config/sources.list
+    sed -i "s|PREVIOUS_CODENAME|$CODENAME|g" config/sources.list
+
+    mkdir -p plan/include
     cp ../PREVIOUS_CODENAME.chanko/plan/main plan/main
     cp ../PREVIOUS_CODENAME.chanko/plan/include/turnkey plan/include/turnkey
 
@@ -122,11 +125,11 @@ Creating a chanko from scratch (ie. transition)::
     cp tmp/usr/share/keyrings/debian-archive-keyring.gpg config/trustedkeys.gpg
     rm -rf tmp *.deb
 
-    chanko-upgrade
-
     git-init
     echo .internal > .gitignore
     echo archives >> .gitignore
     git-add .
     git-commit -m "initial commit"
+
+    chanko-upgrade
 
