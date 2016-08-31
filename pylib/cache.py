@@ -45,7 +45,8 @@ class Cache(object):
               'Dir::State': self.state_apt,
               'Dir::State::Lists': self.cache_lists,
               'Dir::State::status': self.state_dpkg_status,
-              'APT::Architecture': self.chanko.architecture }
+              'APT::Architecture': self.chanko.architecture,
+              'Acquire::CompressionTypes::Order::': "gz" }
 
         return " ".join(map(lambda x: "-o %s=%s" % (x[0], x[1]), d.items()))
 

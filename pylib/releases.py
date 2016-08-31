@@ -41,12 +41,7 @@ class Uri:
 
     def download(self):
         print "* get: " + self.destfile
-        if self.filename == "Packages.bz2":
-            path = self.path + ".bz2"
-            executil.system("curl -L -f %s -o %s" % (self.url, path))
-            executil.system("bzcat %s > %s" % (path, self.path))
-
-        elif self.filename == "Packages.gz":
+        if self.filename == "Packages.gz":
             path = self.path + ".gz"
             executil.system("curl -L -f %s -o %s" % (self.url, path))
             executil.system("zcat %s > %s" % (path, self.path))
@@ -72,7 +67,7 @@ class Release:
         if uri.filename == "Release.gpg":
             self.uri_release_gpg = uri
 
-        if uri.filename == "Packages.bz2":
+        if uri.filename == "Packages.gz":
             self.uri_indexes.append(uri)
 
     def _index_in_release(self, index_path, release_content):
@@ -99,16 +94,8 @@ class Release:
             if self._index_in_release(uri_index.path, release_content):
                 continue
 
-            # attempt download of Packages.bz2, fallback to Packages.gz
-            try:
-                uri_index.download()
-            except executil.ExecError, e:
-                if uri_index.filename == "Packages.bz2" and not e.exitcode == 22:
-                    raise e
-
-                print "* info: Packages.bz2 not available, falling back to gzip..."
-                uri_index.url = uri_index.url.replace("bz2", "gz")
-                uri_index.download()
+            # perform download
+            uri_index.download()
 
             # verify integrity, delete on failure
             if not self._index_in_release(uri_index.path, release_content):
