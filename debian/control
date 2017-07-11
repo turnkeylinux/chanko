@@ -2,10 +2,18 @@ Source: chanko
 Section: misc
 Priority: optional
 Maintainer: Alon Swartz <alon@turnkeylinux.org>
-Build-Depends: pyproject-common
+Build-Depends:
+ pyproject-common,
 Standards-Version: 3.6.1
 
 Package: chanko
 Architecture: any
-Depends: pyproject-common, pool, ccurl, curl, gzip, gpgv, cpp
+Depends:
+ ccurl,
+ cpp,
+ curl,
+ gpgv,
+ gzip,
+ pool,
+ pyproject-common,
 Description: efficiently get packages from public sources
