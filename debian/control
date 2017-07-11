@@ -16,7 +16,6 @@ Depends:
  cpp,
  curl,
  gpgv,
- gzip,
  ${misc:Depends},
  pool,
  ${python:Depends},
