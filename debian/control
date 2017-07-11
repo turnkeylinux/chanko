@@ -5,7 +5,9 @@ Maintainer: Alon Swartz <alon@turnkeylinux.org>
 Build-Depends:
  debhelper (>= 10),
  pyproject-common,
+ python-all (>= 2.6.6-3~),
 Standards-Version: 4.0.0
+X-Python-Version: >= 2.6
 
 Package: chanko
 Architecture: any
@@ -15,6 +17,9 @@ Depends:
  curl,
  gpgv,
  gzip,
+ ${misc:Depends},
  pool,
+ ${python:Depends},
  pyproject-common,
+ ${shlibs:Depends},
 Description: efficiently get packages from public sources
