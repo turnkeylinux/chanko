@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
 #
 # This file is part of Chanko
@@ -34,7 +34,7 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s (-r | -l) [-options] [package_glob]" % sys.argv[0]
+    print("Syntax: %s (-r | -l) [-options] [package_glob]" % sys.argv[0], file=sys.stderr)
 
 def main():
     try:
@@ -42,7 +42,7 @@ def main():
                                    ['remote', 'local',
                                     'info', 'names', 'stats'])
 
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     kws={}
@@ -74,11 +74,11 @@ def main():
     results = cache.query(package, **kws)
 
     if results == None:
-        print "%s cache is empty" % cache_type.capitalize()
+        print("%s cache is empty" % cache_type.capitalize())
     elif results == "":
-        print "No matches found"
+        print("No matches found")
     else:
-        print results
+        print(results)
 
 
 if __name__ == "__main__":

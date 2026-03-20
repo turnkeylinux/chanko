@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
 #
 # This file is part of Chanko
@@ -27,7 +27,7 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options]" % sys.argv[0]
+    print("Syntax: %s [-options]" % sys.argv[0], file=sys.stderr)
 
 def purge(path, force=False):
     pkgcache = PackageCache(path)
@@ -41,30 +41,30 @@ def purge(path, force=False):
     candidates = []
     for name, version in pkgcache.list():
         if name in duplicates:
-            if not newest.has_key(name) or \
+            if name not in newest or \
                debversion.compare(newest[name], version) < 0:
                 newest[name] = version
             else:
                 candidates.append(pkgcache.getpath(name, version))
 
     if len(candidates) == 0:
-        print "No candidates for deletion"
+        print("No candidates for deletion")
         return False
 
     candidates.sort()
-    print "Candidates for deletion:"
+    print("Candidates for deletion:")
     for candidate in candidates:
-        print "  " + os.path.basename(candidate)
+        print("  " + os.path.basename(candidate))
 
-    print "Amount of candidates: %i" % len(candidates)
+    print("Amount of candidates: %i" % len(candidates))
 
     if not force:
-        print "Do you want to continue [y/N]?",
-        if not raw_input() in ['Y', 'y']:
-            print "aborted by user"
+        print("Do you want to continue [y/N]?", end=' ')
+        if input() not in ['Y', 'y']:
+            print("aborted by user")
             return False
 
-    print "Deleting..."
+    print("Deleting...")
     for candidate in candidates:
         os.remove(candidate)
 
@@ -73,7 +73,7 @@ def purge(path, force=False):
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], ":f", ['force'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     force = False
@@ -89,4 +89,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

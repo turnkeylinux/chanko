@@ -40,7 +40,7 @@ class Uri:
             return hostname + "_" + m.group(2)
 
     def download(self):
-        print "* get: " + self.destfile
+        print("* get: " + self.destfile)
         if self.filename == "Packages.gz":
             path = self.path + ".gz"
             executil.system("curl -L -f %s -o %s" % (self.url, path))
@@ -74,7 +74,7 @@ class Release:
         if not os.path.exists(index_path):
             return False
 
-        digest = hashlib.md5(file(index_path, 'rb').read()).hexdigest()
+        digest = hashlib.md5(open(index_path, 'rb').read()).hexdigest()
         if re.search(digest, release_content):
             return True
 
@@ -87,7 +87,7 @@ class Release:
         executil.getoutput("gpgv", "--keyring", self.chanko.trustedkeys,
                            self.uri_release_gpg.path, self.uri_release.path)
 
-        release_content = file(self.uri_release.path).read()
+        release_content = open(self.uri_release.path).read()
 
         for uri_index in self.uri_indexes:
             # skip download if latest
@@ -123,6 +123,5 @@ def refresh(chanko, cache):
         release.add_uri(uri)
         releases[uri.release] = release
 
-    for release in releases.values():
+    for release in list(releases.values()):
         release.refresh()
-
