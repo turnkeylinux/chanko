@@ -26,11 +26,11 @@ def format_bytes(bytes):
     M = (1024 * 1024)
     K = (1024)
     if bytes > G:
-        return str(bytes/G) + "G"
+        return str(bytes//G) + "G"
     elif bytes > M:
-        return str(bytes/M) + "M"
+        return str(bytes//M) + "M"
     else:
-        return str(bytes/K) + "K"
+        return str(bytes//K) + "K"
 
 def cpp(input, cpp_opts=[]):
     """preprocess <input> through cpp -> preprocessed output
@@ -44,7 +44,7 @@ def cpp(input, cpp_opts=[]):
     trap = stdtrap.StdTrap()
     try:
         executil.system(*command)
-    except executil.ExecError, e:
+    except executil.ExecError as e:
         trap.close()
         trapped_stderr = trap.stderr.read()
         raise executil.ExecError(" ".join(command), e.exitcode, trapped_stderr)
@@ -65,4 +65,3 @@ def parse_inputfile(path, cpp_opts=[]):
         packages.add(expr)
 
     return packages
-

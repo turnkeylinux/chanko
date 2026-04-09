@@ -10,6 +10,7 @@
 import os
 from utils import makedirs, parse_inputfile
 
+
 class Plan:
     def __init__(self, path, architecture, cpp_opts=[]):
         self.base = path
@@ -27,7 +28,7 @@ class Plan:
             current_plan = parse_inputfile(plan_path, self.cpp_opts)
 
         for package_name in package_names:
-            if not package_name in current_plan:
+            if package_name not in current_plan:
                 file(plan_path, "a").write(package_name + "\n")
 
     def list(self):
@@ -40,4 +41,3 @@ class Plan:
             plans[plan_name] = parse_inputfile(plan_path, self.cpp_opts)
 
         return plans
-

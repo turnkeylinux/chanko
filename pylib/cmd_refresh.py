@@ -21,9 +21,11 @@ import sys
 import help
 from chanko import Chanko
 
+
 @help.usage(__doc__)
 def usage():
     print >> sys.stderr, "Syntax: %s (-r | -l | -a)" % sys.argv[0]
+
 
 def main():
     if len(sys.argv) != 2:
@@ -36,11 +38,11 @@ def main():
         remote = True
 
     elif sys.argv[1] in ('-l', '--local'):
-        local  = True
+        local = True
 
     elif sys.argv[1] in ('-a', '--all'):
         remote = True
-        local  = True
+        local = True
     else:
         usage()
 
@@ -51,6 +53,6 @@ def main():
     if local:
         chanko.local_cache.refresh()
 
+
 if __name__ == "__main__":
     main()
-

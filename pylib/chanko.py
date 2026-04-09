@@ -30,7 +30,7 @@ class ChankoConfig(dict):
         self._verify(self.required)
 
     def _parse(self, path):
-        for line in file(path).readlines():
+        for line in open(path).readlines():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
@@ -40,7 +40,7 @@ class ChankoConfig(dict):
 
     def _verify(self, required):
         for req in self.required:
-            if not self.has_key(req):
+            if req not in self:
                 raise Error("%s not specified in conf" % req)
 
             if not self[req]:
@@ -54,7 +54,7 @@ class ChankoConfig(dict):
     def __getattr__(self, key):
         try:
             return self[key]
-        except KeyError, e:
+        except KeyError as e:
             raise AttributeError(e)
 
 class Chanko(object):
@@ -103,4 +103,3 @@ class Chanko(object):
             self.local_cache.refresh()
 
         return result
-

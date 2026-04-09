@@ -33,7 +33,7 @@ class Cache(object):
         self.state_dpkg_status = os.path.join(self.state_dpkg, 'status')
         makedirs(self.state_apt)
         makedirs(self.state_dpkg)
-        file(os.path.join(self.state_dpkg_status), 'w').write('')
+        open(os.path.join(self.state_dpkg_status), 'w').write('')
 
     @property
     def options(self):
@@ -113,7 +113,7 @@ class RemoteCache(Cache):
         self.sources_list = self.chanko.sources_list
 
     def refresh(self):
-        print "Refreshing remote cache..."
+        print("Refreshing remote cache...")
 
         releases.refresh(self.chanko, self)
         self._cmdcache("gencaches")
@@ -124,10 +124,10 @@ class LocalCache(Cache):
         super(LocalCache, self).__init__(chanko, 'local')
 
         self.sources_list = os.path.join(self.cache, 'sources.list')
-        file(self.sources_list, "w").write("deb file:/// local debs")
+        open(self.sources_list, "w").write("deb file:/// local debs")
 
     def refresh(self):
-        print "Refreshing local cache..."
+        print("Refreshing local cache...")
 
         list = "_dists_local_debs_binary-%s_Packages" % self.chanko.architecture
         list_path = os.path.join(self.cache_lists, list)
@@ -138,4 +138,3 @@ class LocalCache(Cache):
         executil.system(cmd)
 
         self._cmdcache("gencaches")
-

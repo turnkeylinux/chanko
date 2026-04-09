@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Copyright (c) 2012 Alon Swartz <alon@turnkeylinux.org>
 #
 # This file is part of Chanko
@@ -31,13 +31,13 @@ from chanko import Chanko
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options] <packages>" % sys.argv[0]
+    print("Syntax: %s [-options] <packages>" % sys.argv[0], file=sys.stderr)
 
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], ":fpn",
                                        ['force', 'pretend', 'no-deps'])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     force = False
@@ -68,24 +68,24 @@ def main():
     candidates = chanko.get_package_candidates(packages, nodeps)
 
     if len(candidates) == 0:
-        print "Nothing to get..."
+        print("Nothing to get...")
         return
 
     bytes = 0
     for candidate in candidates:
         bytes += candidate.bytes
-        print candidate.filename
+        print(candidate.filename)
 
-    print "Amount of packages: %i" % len(candidates)
-    print "Need to get %s of archives" % format_bytes(bytes)
+    print("Amount of packages: %i" % len(candidates))
+    print("Need to get %s of archives" % format_bytes(bytes))
 
     if pretend:
         return
 
     if not force:
-        print "Do you want to continue [y/N]?",
-        if not raw_input() in ['Y', 'y']:
-            print "aborted by user"
+        print("Do you want to continue [y/N]?", end="")
+        if not input() in ['Y', 'y']:
+            print("aborted by user")
             return
 
     result = chanko.get_packages(candidates=candidates)
@@ -96,4 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

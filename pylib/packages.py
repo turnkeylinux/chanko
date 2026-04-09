@@ -28,11 +28,11 @@ class Uri:
         self.filename = os.path.basename(self.url)
 
     def download(self):
-        print "* get: " + self.filename
+        print("* get: " + self.filename)
         executil.system("ccurl-get", self.url, self.path)
 
         # verify integrity, delete on failure
-        content = file(self.path, 'rb').read()
+        content = open(self.path, 'rb').read()
         digest = getattr(hashlib, self.hashtype.lower())(content).hexdigest()
         if not digest == self.digest:
             os.remove(self.path)
@@ -43,9 +43,9 @@ def get_uris(chanko, cache, packages, nodeps=False):
     try:
         cmd = "apt-get %s --print-uris -y install" % (cache.options)
         raw = executil.getoutput(cmd, *packages)
-    except executil.ExecError, e:
+    except executil.ExecError as e:
         if re.search("Couldn\'t find package", e[2]):
-            print "Couldn't find package '%s'" % e[2].split()[-1]
+            print("Couldn't find package '%s'" % e[2].split()[-1])
             return []
         else:
             raise Error("get_uris raised error: ", e)
@@ -75,4 +75,3 @@ def download_uris(uris):
         uri.download()
 
     return True
-
